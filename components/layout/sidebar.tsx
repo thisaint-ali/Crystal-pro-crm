@@ -15,8 +15,8 @@ import {
   Users2,
   Settings,
   LogOut,
-  Droplets,
 } from 'lucide-react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
@@ -94,16 +94,8 @@ export function Sidebar({ profile }: SidebarProps) {
   return (
     <aside className="hidden lg:flex flex-col w-64 min-h-screen bg-slate-900 text-white border-r border-slate-800">
       {/* Logo */}
-      <div className="p-5 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Droplets className="w-5 h-5 text-white" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-bold text-sm leading-tight truncate">Crystal Pro</p>
-            <p className="text-xs text-slate-400 truncate">Powerwashing CRM</p>
-          </div>
-        </div>
+      <div className="p-4 border-b border-slate-800">
+        <Image src="/logo.png" alt="Crystal Pro Powerwashing" width={180} height={90} className="w-full object-contain" />
       </div>
 
       {/* Navigation */}

@@ -18,8 +18,8 @@ import {
   Users2,
   Settings,
   LogOut,
-  Droplets,
 } from 'lucide-react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
@@ -99,11 +99,8 @@ export function MobileNav({ profile }: MobileNavProps) {
     <>
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-slate-900 text-white border-b border-slate-800 h-14 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-blue-600 rounded-md flex items-center justify-center">
-            <Droplets className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-sm">Crystal Pro CRM</span>
+        <div className="flex items-center">
+          <Image src="/logo.png" alt="Crystal Pro" width={120} height={60} className="object-contain" />
         </div>
         <button
           onClick={() => setIsOpen(true)}
@@ -131,15 +128,7 @@ export function MobileNav({ profile }: MobileNavProps) {
       >
         {/* Header */}
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Droplets className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <p className="font-bold text-sm">Crystal Pro</p>
-              <p className="text-xs text-slate-400">Powerwashing CRM</p>
-            </div>
-          </div>
+          <Image src="/logo.png" alt="Crystal Pro" width={140} height={70} className="object-contain" />
           <button
             onClick={() => setIsOpen(false)}
             className="p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
