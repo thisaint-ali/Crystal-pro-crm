@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StatusBadge } from '@/components/shared/status-badge'
-import { formatCurrency, formatTime } from '@/lib/utils'
+import { formatTime } from '@/lib/utils'
 import { addDays, startOfWeek, format, parseISO, isSameDay } from 'date-fns'
+import { WorkerFilter } from '@/components/calendar/worker-filter'
 
 export default async function CalendarPage({
   searchParams,
@@ -70,23 +71,10 @@ export default async function CalendarPage({
         <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
         <div className="flex items-center gap-2">
           {workers && workers.length > 0 && (
-            <form method="get">
-              <select
-                name="worker"
-                defaultValue={workerFilter}
-                onChange={(e) => {
-                  const url = new URL(window.location.href)
-                  url.searchParams.set('worker', e.target.value)
-                  window.location.href = url.toString()
-                }}
-                className="h-9 text-sm border rounded-md px-2"
-              >
-                <option value="">All Workers</option>
-                {workers.map((w: any) => (
-                  <option key={w.id} value={w.id}>{w.full_name}</option>
-                ))}
-              </select>
-            </form>
+            <WorkerFilter
+              workers={workers as { id: string; full_name: string }[]}
+              current={workerFilter}
+            />
           )}
         </div>
       </div>
