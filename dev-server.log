@@ -1,0 +1,31 @@
+
+> crystal-pro-crm@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.0.4
+   - Local:        http://localhost:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 4.6s
+ ✓ Compiled /middleware in 493ms (144 modules)
+ ○ Compiling /login ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (101kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (231kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled /login in 6.3s (929 modules)
+ GET /login 200 in 7010ms
+ ✓ Compiled in 801ms (463 modules)
+ ✓ Compiled in 752ms (920 modules)
+ GET /login 200 in 119ms
+ ✓ Compiled in 549ms (920 modules)
+ GET /login 200 in 61ms
+ GET /login?error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&redirectTo=%2F 200 in 351ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 2.5s (1165 modules)
+ GET /dashboard 200 in 4295ms
+ GET /dashboard 200 in 1089ms
+ GET /dashboard 200 in 1135ms
+ ○ Compiling /jobs ...
+ ✓ Compiled /jobs in 1491ms (1320 modules)
+ GET /jobs 200 in 2594ms
+ GET /dashboard 200 in 1286ms
