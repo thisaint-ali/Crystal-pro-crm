@@ -94,10 +94,8 @@ export function Sidebar({ profile }: SidebarProps) {
   return (
     <aside className="hidden lg:flex flex-col w-64 min-h-screen bg-slate-900 text-white border-r border-slate-800">
       {/* Logo */}
-      <div className="p-3 border-b border-slate-800">
-        <div className="bg-white rounded-lg p-2">
-          <Image src="/logo.png" alt="Crystal Pro Powerwashing" width={180} height={72} className="w-full object-contain" />
-        </div>
+      <div className="p-4 border-b border-slate-800">
+        <Image src="/logo.png" alt="Crystal Pro Powerwashing" width={180} height={72} className="w-full object-contain" />
       </div>
 
       {/* Navigation */}

@@ -99,9 +99,7 @@ export function MobileNav({ profile }: MobileNavProps) {
     <>
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-slate-900 text-white border-b border-slate-800 h-14 flex items-center justify-between px-4">
-        <div className="bg-white rounded-md px-2 py-1">
-          <Image src="/logo.png" alt="Crystal Pro" width={110} height={44} className="object-contain" />
-        </div>
+        <Image src="/logo.png" alt="Crystal Pro" width={110} height={44} className="object-contain" />
         <button
           onClick={() => setIsOpen(true)}
           className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
@@ -128,9 +126,7 @@ export function MobileNav({ profile }: MobileNavProps) {
       >
         {/* Header */}
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-          <div className="bg-white rounded-lg px-2 py-1">
-            <Image src="/logo.png" alt="Crystal Pro" width={130} height={52} className="object-contain" />
-          </div>
+          <Image src="/logo.png" alt="Crystal Pro" width={130} height={52} className="object-contain" />
           <button
             onClick={() => setIsOpen(false)}
             className="p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
