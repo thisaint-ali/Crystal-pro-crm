@@ -15,7 +15,7 @@ export default async function CalendarPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const { data: profile } = await supabase.from('profiles').select('id, role, active').eq('id', user.id).single() as { data: { id: string; role: string; active: boolean } | null }
   if (!profile) redirect('/login')
 
   const params = await searchParams

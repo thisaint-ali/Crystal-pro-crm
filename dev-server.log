@@ -29,3 +29,22 @@
  ✓ Compiled /jobs in 1491ms (1320 modules)
  GET /jobs 200 in 2594ms
  GET /dashboard 200 in 1286ms
+ ✓ Compiled in 476ms (583 modules)
+ GET /dashboard 200 in 55ms
+ ✓ Compiled in 410ms (583 modules)
+ GET /dashboard 200 in 31ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 718ms (1323 modules)
+ GET /_next/static/css/app/layout.css?v=1778764241361 404 in 976ms
+ GET /dashboard 200 in 1851ms
+ GET /_next/static/css/app/layout.css?v=1778764247340 404 in 29ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 40ms
+ GET /_next/static/chunks/app/(dashboard)/layout.js 404 in 45ms
+ GET /_next/static/chunks/main-app.js?v=1778764247340 404 in 48ms
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+   ▲ Next.js 15.0.4
+   - Local:        http://localhost:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 3.8s
