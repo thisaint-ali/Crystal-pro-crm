@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { leadSchema } from '@/lib/validations/lead'
 import { logActivity } from './activity'
+import { geocodeAddress } from '@/lib/utils/geocode'
 
 async function requireAdminOrManager() {
   const supabase = await createClient()
@@ -36,6 +37,8 @@ export async function createLead(formData: FormData): Promise<{ error?: string; 
   }
 
   const data = parsed.data
+  const coords = await geocodeAddress({ address: data.address, city: data.city, state: data.state, zip_code: data.zip_code })
+
   const { data: lead, error } = await supabase!
     .from('leads')
     .insert({
@@ -51,6 +54,8 @@ export async function createLead(formData: FormData): Promise<{ error?: string; 
       notes: data.notes || null,
       next_follow_up_at: data.next_follow_up_at || null,
       created_by: user.id,
+      latitude: coords?.lat ?? null,
+      longitude: coords?.lng ?? null,
     })
     .select('id')
     .single()
@@ -76,6 +81,8 @@ export async function updateLead(
   }
 
   const data = parsed.data
+  const coords = await geocodeAddress({ address: data.address, city: data.city, state: data.state, zip_code: data.zip_code })
+
   const { error } = await supabase!
     .from('leads')
     .update({
@@ -90,6 +97,7 @@ export async function updateLead(
       estimated_value: data.estimated_value ? Number(data.estimated_value) : null,
       notes: data.notes || null,
       next_follow_up_at: data.next_follow_up_at || null,
+      ...(coords ? { latitude: coords.lat, longitude: coords.lng } : {}),
     })
     .eq('id', id)
 

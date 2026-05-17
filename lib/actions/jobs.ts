@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from './activity'
+import { geocodeAddress } from '@/lib/utils/geocode'
 
 async function getCurrentUser() {
   const supabase = await createClient()
@@ -45,6 +46,8 @@ export async function createJob(input: CreateJobInput): Promise<{ error?: string
   const { user, profile, supabase } = await getCurrentUser()
   if (!['admin', 'manager'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
 
+  const coords = await geocodeAddress({ address: input.address, city: input.city, state: input.state, zip_code: input.zip_code })
+
   const { data: job, error } = await supabase
     .from('jobs')
     .insert({
@@ -64,6 +67,8 @@ export async function createJob(input: CreateJobInput): Promise<{ error?: string
       payment_status: input.payment_status || 'unpaid',
       review_status: 'not_requested',
       created_by: user.id,
+      latitude: coords?.lat ?? null,
+      longitude: coords?.lng ?? null,
     })
     .select('id, job_number')
     .single()
@@ -86,6 +91,10 @@ export async function updateJob(
   const { profile, supabase } = await getCurrentUser()
   if (!['admin', 'manager'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
 
+  const coords = input.address
+    ? await geocodeAddress({ address: input.address, city: input.city, state: input.state, zip_code: input.zip_code })
+    : null
+
   const { error } = await supabase
     .from('jobs')
     .update({
@@ -99,6 +108,7 @@ export async function updateJob(
       crew_notes: input.crew_notes || null,
       customer_notes: input.customer_notes || null,
       internal_notes: input.internal_notes || null,
+      ...(coords ? { latitude: coords.lat, longitude: coords.lng } : {}),
     })
     .eq('id', id)
 

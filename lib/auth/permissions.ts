@@ -135,6 +135,7 @@ export function getNavItems(role: UserRole | null | undefined) {
       { href: '/quotes', label: 'Quotes', icon: 'FileText' },
       { href: '/jobs', label: 'Jobs', icon: 'Briefcase' },
       { href: '/calendar', label: 'Calendar', icon: 'Calendar' },
+      { href: '/map', label: 'Map', icon: 'Map' },
       { href: '/tasks', label: 'Tasks', icon: 'CheckSquare' },
       { href: '/payments', label: 'Payments', icon: 'DollarSign' },
       { href: '/reviews', label: 'Reviews', icon: 'Star' },

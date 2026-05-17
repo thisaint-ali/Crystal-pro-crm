@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { jobSchema, JobFormData } from '@/lib/validations/job'
 import { SERVICE_TYPES, PAYMENT_STATUSES, DEFAULT_STATE, US_STATES } from '@/lib/constants'
 import type { CreateJobInput } from '@/lib/actions/jobs'
+import { ProximityAlert } from '@/components/map/proximity-alert'
 
 interface JobFormProps {
   workers: { id: string; full_name: string }[]
@@ -244,6 +245,12 @@ export function JobForm({
             <Input placeholder="20171" {...register('zip_code')} />
           </div>
         </div>
+        <ProximityAlert
+          address={watch('address') ?? ''}
+          city={watch('city') ?? ''}
+          state={watch('state') ?? ''}
+          zip_code={watch('zip_code') ?? ''}
+        />
       </div>
 
       {/* Schedule */}
