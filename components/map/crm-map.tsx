@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 // Northern Virginia center
@@ -48,9 +48,38 @@ const STATUS_LABEL: Record<string, string> = {
   lost:        'Lost',
 }
 
+const TILE_LAYERS = {
+  street: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© <a href="https://www.esri.com">Esri</a> — Source: Esri, Maxar, GeoEye, Earthstar Geographics',
+    maxZoom: 19,
+  },
+}
+
 export default function CrmMap({ pins }: { pins: MapPin[] }) {
   const mapRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const streetLayerRef = useRef<any>(null)
+  const satelliteLayerRef = useRef<any>(null)
+  const [isSatellite, setIsSatellite] = useState(false)
+
+  function toggleView() {
+    const map = mapRef.current
+    if (!map) return
+    if (isSatellite) {
+      map.removeLayer(satelliteLayerRef.current)
+      streetLayerRef.current.addTo(map)
+    } else {
+      map.removeLayer(streetLayerRef.current)
+      satelliteLayerRef.current.addTo(map)
+    }
+    setIsSatellite((v) => !v)
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current) return
@@ -72,10 +101,18 @@ export default function CrmMap({ pins }: { pins: MapPin[] }) {
         zoomControl: true,
       })
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
+      const streetLayer = L.tileLayer(TILE_LAYERS.street.url, {
+        attribution: TILE_LAYERS.street.attribution,
+        maxZoom: TILE_LAYERS.street.maxZoom,
       }).addTo(map)
+
+      const satelliteLayer = L.tileLayer(TILE_LAYERS.satellite.url, {
+        attribution: TILE_LAYERS.satellite.attribution,
+        maxZoom: TILE_LAYERS.satellite.maxZoom,
+      })
+
+      streetLayerRef.current = streetLayer
+      satelliteLayerRef.current = satelliteLayer
 
       pins.forEach((pin) => {
         const color = STATUS_COLOR[pin.status] ?? '#6b7280'
@@ -130,6 +167,43 @@ export default function CrmMap({ pins }: { pins: MapPin[] }) {
   }, [])
 
   return (
-    <div ref={containerRef} style={{ height: '100%', width: '100%', zIndex: 0 }} />
+    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+      <div ref={containerRef} style={{ height: '100%', width: '100%', zIndex: 0 }} />
+      <button
+        onClick={toggleView}
+        style={{
+          position: 'absolute',
+          bottom: 24,
+          right: 12,
+          zIndex: 1000,
+          background: 'white',
+          border: '2px solid rgba(0,0,0,0.2)',
+          borderRadius: 6,
+          padding: '6px 10px',
+          cursor: 'pointer',
+          fontSize: 12,
+          fontWeight: 600,
+          fontFamily: 'system-ui,sans-serif',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5,
+          color: '#1e293b',
+        }}
+        title={isSatellite ? 'Switch to street view' : 'Switch to satellite view'}
+      >
+        {isSatellite ? (
+          <>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Street
+          </>
+        ) : (
+          <>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Satellite
+          </>
+        )}
+      </button>
+    </div>
   )
 }
