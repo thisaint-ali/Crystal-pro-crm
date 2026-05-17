@@ -97,17 +97,13 @@ export default async function MapPage() {
         </div>
       </div>
 
-      {/* Map */}
+      {/* Map — always rendered so you can pan/zoom freely */}
       <div className="flex-1 relative">
-        {pins.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-            <div className="text-center">
-              <p className="text-lg font-medium mb-1">No pinned locations yet</p>
-              <p className="text-sm">Add addresses to jobs and leads to see them here.</p>
-            </div>
+        <MapWrapper pins={pins} />
+        {pins.length === 0 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur-sm border rounded-lg px-4 py-2 text-sm text-gray-500 shadow">
+            No pinned locations yet — add addresses to jobs and leads to see them here
           </div>
-        ) : (
-          <MapWrapper pins={pins} />
         )}
       </div>
     </div>
