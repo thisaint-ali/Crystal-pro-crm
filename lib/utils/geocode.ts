@@ -3,6 +3,35 @@ export interface Coords {
   lng: number
 }
 
+// US Census Bureau — exact address-level match for US addresses
+async function censusBureau(parts: {
+  address: string
+  city?: string | null
+  state?: string | null
+  zip_code?: string | null
+}): Promise<Coords | null> {
+  try {
+    const params = new URLSearchParams({
+      street: parts.address,
+      ...(parts.city ? { city: parts.city } : {}),
+      ...(parts.state ? { state: parts.state } : {}),
+      ...(parts.zip_code ? { zip: parts.zip_code } : {}),
+      benchmark: 'Public_AR_Current',
+      format: 'json',
+    })
+    const res = await fetch(
+      `https://geocoding.geo.census.gov/geocoder/locations/address?${params}`,
+      { next: { revalidate: 86400 } }
+    )
+    if (!res.ok) return null
+    const data = await res.json()
+    const match = data?.result?.addressMatches?.[0]?.coordinates
+    if (match?.x && match?.y) return { lat: match.y, lng: match.x }
+  } catch {}
+  return null
+}
+
+// Nominatim fallback for when Census Bureau has no match
 async function nominatim(query: string): Promise<Coords | null> {
   try {
     const res = await fetch(
@@ -26,8 +55,13 @@ export async function geocodeAddress(parts: {
   zip_code?: string | null
 }): Promise<Coords | null> {
   const { address, city, state, zip_code } = parts
+  if (!address) return null
 
-  // Try most-specific first, fall back to progressively coarser queries
+  // Census Bureau gives exact street-level accuracy for US addresses
+  const census = await censusBureau({ address, city, state, zip_code })
+  if (census) return census
+
+  // Nominatim fallback chain — coarsen query until something matches
   const attempts = [
     [address, city, state, zip_code].filter(Boolean).join(', '),
     [address, city, state].filter(Boolean).join(', '),
