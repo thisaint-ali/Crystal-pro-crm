@@ -21,8 +21,8 @@ export default async function NewQuotePage({
   const defaultCustomerId = params.customer_id ?? ''
 
   const [{ data: leads }, { data: customers }] = await Promise.all([
-    supabase.from('leads').select('id, name').order('name'),
-    supabase.from('customers').select('id, name').order('name'),
+    supabase.from('leads').select('id, name, phone, address, city').order('name'),
+    supabase.from('customers').select('id, name, phone, address, city').order('name'),
   ])
 
   return (
@@ -31,8 +31,8 @@ export default async function NewQuotePage({
       <QuoteForm
         defaultLeadId={defaultLeadId}
         defaultCustomerId={defaultCustomerId}
-        leads={(leads ?? []) as { id: string; name: string }[]}
-        customers={(customers ?? []) as { id: string; name: string }[]}
+        leads={(leads ?? []) as { id: string; name: string; phone?: string; address?: string; city?: string }[]}
+        customers={(customers ?? []) as { id: string; name: string; phone?: string; address?: string; city?: string }[]}
         onSubmit={createQuote}
         submitLabel="Create Quote"
       />

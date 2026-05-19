@@ -17,6 +17,8 @@ export const jobSchema = z.object({
   crew_notes: z.string().max(2000).optional().or(z.literal('')),
   customer_notes: z.string().max(2000).optional().or(z.literal('')),
   internal_notes: z.string().max(2000).optional().or(z.literal('')),
+  homeowner_name: z.string().max(200).optional().or(z.literal('')),
+  homeowner_phone: z.string().max(30).optional().or(z.literal('')),
   status: z
     .enum(['scheduled', 'on_the_way', 'in_progress', 'completed', 'cancelled'])
     .default('scheduled'),

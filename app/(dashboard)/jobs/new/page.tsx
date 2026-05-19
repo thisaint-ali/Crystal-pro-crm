@@ -23,29 +23,35 @@ export default async function NewJobPage({
 
   const [{ data: workers }, { data: customers }, { data: leads }] = await Promise.all([
     supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
-    supabase.from('customers').select('id, name').order('name'),
-    supabase.from('leads').select('id, name').order('name'),
+    supabase.from('customers').select('id, name, phone').order('name'),
+    supabase.from('leads').select('id, name, phone').order('name'),
   ])
 
-  // Pre-fill address from customer or lead if available
+  // Pre-fill address + homeowner info from customer or lead if available
   let defaultAddress = ''
   let defaultCity = ''
+  let defaultHomeownerName = ''
+  let defaultHomeownerPhone = ''
   if (defaultCustomerId) {
     const { data: customer } = await supabase
       .from('customers')
-      .select('address, city')
+      .select('address, city, name, phone')
       .eq('id', defaultCustomerId)
       .single()
     defaultAddress = customer?.address ?? ''
     defaultCity = customer?.city ?? ''
+    defaultHomeownerName = customer?.name ?? ''
+    defaultHomeownerPhone = customer?.phone ?? ''
   } else if (defaultLeadId) {
     const { data: lead } = await supabase
       .from('leads')
-      .select('address, city')
+      .select('address, city, name, phone')
       .eq('id', defaultLeadId)
       .single()
     defaultAddress = lead?.address ?? ''
     defaultCity = lead?.city ?? ''
+    defaultHomeownerName = lead?.name ?? ''
+    defaultHomeownerPhone = lead?.phone ?? ''
   }
 
   return (
@@ -53,12 +59,12 @@ export default async function NewJobPage({
       <PageHeader title="New Job" backHref="/jobs" backLabel="Jobs" />
       <JobForm
         workers={(workers ?? []) as { id: string; full_name: string }[]}
-        customers={(customers ?? []) as { id: string; name: string }[]}
-        leads={(leads ?? []) as { id: string; name: string }[]}
+        customers={(customers ?? []) as { id: string; name: string; phone?: string }[]}
+        leads={(leads ?? []) as { id: string; name: string; phone?: string }[]}
         defaultCustomerId={defaultCustomerId}
         defaultLeadId={defaultLeadId}
         defaultQuoteId={defaultQuoteId}
-        initialData={{ address: defaultAddress, city: defaultCity }}
+        initialData={{ address: defaultAddress, city: defaultCity, homeowner_name: defaultHomeownerName, homeowner_phone: defaultHomeownerPhone }}
         onSubmit={createJob}
         submitLabel="Create Job"
       />

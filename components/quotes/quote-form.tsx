@@ -18,8 +18,8 @@ import type { CreateQuoteInput } from '@/lib/actions/quotes'
 interface QuoteFormProps {
   defaultLeadId?: string
   defaultCustomerId?: string
-  leads: { id: string; name: string }[]
-  customers: { id: string; name: string }[]
+  leads: { id: string; name: string; phone?: string; address?: string; city?: string }[]
+  customers: { id: string; name: string; phone?: string; address?: string; city?: string }[]
   onSubmit: (input: CreateQuoteInput) => Promise<{ error?: string; id?: string }>
   initialData?: Partial<QuoteFormData & { items: QuoteFormData['items'] }>
   submitLabel?: string
@@ -174,6 +174,22 @@ export function QuoteForm({
           </div>
         </div>
         <p className="text-xs text-gray-400">Select either a customer or a lead, not both.</p>
+        {/* Homeowner contact info — shown when a customer or lead is selected */}
+        {(() => {
+          const cid = watch('customer_id')
+          const lid = watch('lead_id')
+          const contact = cid ? customers.find(c => c.id === cid) : lid ? leads.find(l => l.id === lid) : null
+          if (!contact) return null
+          return (
+            <div className="rounded-md bg-gray-50 border border-gray-200 px-4 py-3 space-y-1 text-sm">
+              <p className="font-semibold text-gray-800">{contact.name}</p>
+              {contact.phone && <p className="text-gray-600">{contact.phone}</p>}
+              {(contact.address || contact.city) && (
+                <p className="text-gray-500">{[contact.address, contact.city].filter(Boolean).join(', ')}</p>
+              )}
+            </div>
+          )
+        })()}
       </div>
 
       {/* Service */}

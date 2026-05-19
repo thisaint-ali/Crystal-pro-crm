@@ -40,6 +40,8 @@ export interface CreateJobInput {
   customer_notes?: string
   internal_notes?: string
   payment_status?: string
+  homeowner_name?: string
+  homeowner_phone?: string
 }
 
 export async function createJob(input: CreateJobInput): Promise<{ error?: string; id?: string }> {
@@ -63,6 +65,8 @@ export async function createJob(input: CreateJobInput): Promise<{ error?: string
       crew_notes: input.crew_notes || null,
       customer_notes: input.customer_notes || null,
       internal_notes: input.internal_notes || null,
+      homeowner_name: input.homeowner_name || null,
+      homeowner_phone: input.homeowner_phone || null,
       status: 'scheduled',
       payment_status: input.payment_status || 'unpaid',
       review_status: 'not_requested',
@@ -108,6 +112,8 @@ export async function updateJob(
       crew_notes: input.crew_notes || null,
       customer_notes: input.customer_notes || null,
       internal_notes: input.internal_notes || null,
+      homeowner_name: input.homeowner_name || null,
+      homeowner_phone: input.homeowner_phone || null,
       ...(coords ? { latitude: coords.lat, longitude: coords.lng } : {}),
     })
     .eq('id', id)

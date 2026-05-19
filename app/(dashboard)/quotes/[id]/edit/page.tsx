@@ -22,8 +22,8 @@ export default async function EditQuotePage({ params }: { params: Promise<{ id: 
   if (!quote) notFound()
 
   const [{ data: leads }, { data: customers }] = await Promise.all([
-    supabase.from('leads').select('id, name').order('name'),
-    supabase.from('customers').select('id, name').order('name'),
+    supabase.from('leads').select('id, name, phone, address, city').order('name'),
+    supabase.from('customers').select('id, name, phone, address, city').order('name'),
   ])
 
   const updateAction = async (input: Parameters<typeof updateQuote>[1]) => {
@@ -44,8 +44,8 @@ export default async function EditQuotePage({ params }: { params: Promise<{ id: 
     <div className="p-4 lg:p-6 max-w-3xl">
       <PageHeader title="Edit Quote" backHref={`/quotes/${id}`} backLabel={quote.quote_number} />
       <QuoteForm
-        leads={(leads ?? []) as { id: string; name: string }[]}
-        customers={(customers ?? []) as { id: string; name: string }[]}
+        leads={(leads ?? []) as { id: string; name: string; phone?: string; address?: string; city?: string }[]}
+        customers={(customers ?? []) as { id: string; name: string; phone?: string; address?: string; city?: string }[]}
         onSubmit={updateAction as any}
         initialData={{
           lead_id: quote.lead_id ?? '',

@@ -16,8 +16,8 @@ import { ProximityAlert } from '@/components/map/proximity-alert'
 
 interface JobFormProps {
   workers: { id: string; full_name: string }[]
-  customers?: { id: string; name: string }[]
-  leads?: { id: string; name: string }[]
+  customers?: { id: string; name: string; phone?: string }[]
+  leads?: { id: string; name: string; phone?: string }[]
   defaultCustomerId?: string
   defaultLeadId?: string
   defaultQuoteId?: string
@@ -68,6 +68,8 @@ export function JobForm({
       crew_notes: initialData?.crew_notes ?? '',
       customer_notes: initialData?.customer_notes ?? '',
       internal_notes: initialData?.internal_notes ?? '',
+      homeowner_name: initialData?.homeowner_name ?? '',
+      homeowner_phone: initialData?.homeowner_phone ?? '',
       status: initialData?.status ?? 'scheduled',
       payment_status: initialData?.payment_status ?? 'unpaid',
     },
@@ -94,6 +96,8 @@ export function JobForm({
       customer_notes: data.customer_notes || undefined,
       internal_notes: data.internal_notes || undefined,
       payment_status: data.payment_status,
+      homeowner_name: data.homeowner_name || undefined,
+      homeowner_phone: data.homeowner_phone || undefined,
     })
     if (result.error) {
       setServerError(result.error)
@@ -122,7 +126,14 @@ export function JobForm({
                 value={watch('customer_id') || ''}
                 onValueChange={(v) => {
                   setValue('customer_id', v === 'none' ? '' : v)
-                  if (v !== 'none') setValue('lead_id', '')
+                  if (v !== 'none') {
+                    setValue('lead_id', '')
+                    const c = customers.find(x => x.id === v)
+                    if (c) {
+                      setValue('homeowner_name', c.name)
+                      setValue('homeowner_phone', c.phone ?? '')
+                    }
+                  }
                 }}
               >
                 <SelectTrigger>
@@ -144,7 +155,14 @@ export function JobForm({
                 value={watch('lead_id') || ''}
                 onValueChange={(v) => {
                   setValue('lead_id', v === 'none' ? '' : v)
-                  if (v !== 'none') setValue('customer_id', '')
+                  if (v !== 'none') {
+                    setValue('customer_id', '')
+                    const l = leads.find(x => x.id === v)
+                    if (l) {
+                      setValue('homeowner_name', l.name)
+                      setValue('homeowner_phone', l.phone ?? '')
+                    }
+                  }
                 }}
               >
                 <SelectTrigger>
@@ -217,6 +235,16 @@ export function JobForm({
       {/* Location */}
       <div className="bg-white rounded-lg border p-5 space-y-4">
         <h2 className="font-semibold text-gray-900">Location</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>Homeowner Name</Label>
+            <Input placeholder="Jane Smith" {...register('homeowner_name')} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Homeowner Phone</Label>
+            <Input type="tel" placeholder="(703) 555-0100" {...register('homeowner_phone')} />
+          </div>
+        </div>
         <div className="space-y-1.5">
           <Label>Street Address *</Label>
           <Input placeholder="123 Main St" {...register('address')} />

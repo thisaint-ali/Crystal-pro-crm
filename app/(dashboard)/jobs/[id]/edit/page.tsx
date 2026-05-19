@@ -18,8 +18,8 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
 
   const [{ data: workers }, { data: customers }, { data: leads }] = await Promise.all([
     supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
-    supabase.from('customers').select('id, name').order('name'),
-    supabase.from('leads').select('id, name').order('name'),
+    supabase.from('customers').select('id, name, phone').order('name'),
+    supabase.from('leads').select('id, name, phone').order('name'),
   ])
 
   const updateAction = async (input: Parameters<typeof updateJob>[1]) => {
@@ -32,8 +32,8 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
       <PageHeader title="Edit Job" backHref={`/jobs/${id}`} backLabel={job.job_number} />
       <JobForm
         workers={(workers ?? []) as { id: string; full_name: string }[]}
-        customers={(customers ?? []) as { id: string; name: string }[]}
-        leads={(leads ?? []) as { id: string; name: string }[]}
+        customers={(customers ?? []) as { id: string; name: string; phone?: string }[]}
+        leads={(leads ?? []) as { id: string; name: string; phone?: string }[]}
         initialData={{
           customer_id: job.customer_id ?? '',
           lead_id: job.lead_id ?? '',
@@ -53,6 +53,8 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
           internal_notes: job.internal_notes ?? '',
           status: job.status as any,
           payment_status: job.payment_status as any,
+          homeowner_name: job.homeowner_name ?? '',
+          homeowner_phone: job.homeowner_phone ?? '',
         }}
         onSubmit={updateAction as any}
         submitLabel="Save Changes"
