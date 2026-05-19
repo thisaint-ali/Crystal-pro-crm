@@ -114,6 +114,8 @@ export default function CrmMap({ pins }: { pins: MapPin[] }) {
       streetLayerRef.current = streetLayer
       satelliteLayerRef.current = satelliteLayer
 
+      const markers: any[] = []
+
       pins.forEach((pin) => {
         const color = STATUS_COLOR[pin.status] ?? '#6b7280'
 
@@ -152,8 +154,17 @@ export default function CrmMap({ pins }: { pins: MapPin[] }) {
           </div>
         `)
 
-        L.marker([pin.lat, pin.lng], { icon }).addTo(map).bindPopup(popup)
+        const marker = L.marker([pin.lat, pin.lng], { icon }).addTo(map).bindPopup(popup)
+        markers.push(marker)
       })
+
+      // Auto-fit map to show all pins; single pin zooms to street level
+      if (markers.length === 1) {
+        map.setView([pins[0].lat, pins[0].lng], 16)
+      } else if (markers.length > 1) {
+        const group = L.featureGroup(markers)
+        map.fitBounds(group.getBounds(), { padding: [60, 60], maxZoom: 16 })
+      }
 
       mapRef.current = map
     })

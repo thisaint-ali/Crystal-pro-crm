@@ -3,7 +3,38 @@ export interface Coords {
   lng: number
 }
 
-// US Census Bureau — exact address-level match for US addresses
+// ArcGIS World Geocoder — highest accuracy for US addresses
+async function arcgis(parts: {
+  address: string
+  city?: string | null
+  state?: string | null
+  zip_code?: string | null
+}): Promise<Coords | null> {
+  try {
+    const params = new URLSearchParams({
+      Address: parts.address,
+      ...(parts.city ? { City: parts.city } : {}),
+      ...(parts.state ? { Region: parts.state } : {}),
+      ...(parts.zip_code ? { Postal: parts.zip_code } : {}),
+      CountryCode: 'US',
+      maxLocations: '1',
+      f: 'json',
+    })
+    const res = await fetch(
+      `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?${params}`,
+      { next: { revalidate: 86400 } }
+    )
+    if (!res.ok) return null
+    const data = await res.json()
+    const c = data?.candidates?.[0]
+    if (c?.location?.x && c?.location?.y && c?.score >= 80) {
+      return { lat: c.location.y, lng: c.location.x }
+    }
+  } catch {}
+  return null
+}
+
+// US Census Bureau — fallback exact match
 async function censusBureau(parts: {
   address: string
   city?: string | null
@@ -57,7 +88,10 @@ export async function geocodeAddress(parts: {
   const { address, city, state, zip_code } = parts
   if (!address) return null
 
-  // Census Bureau gives exact street-level accuracy for US addresses
+  // ArcGIS first (highest accuracy), Census Bureau second
+  const esri = await arcgis({ address, city, state, zip_code })
+  if (esri) return esri
+
   const census = await censusBureau({ address, city, state, zip_code })
   if (census) return census
 
