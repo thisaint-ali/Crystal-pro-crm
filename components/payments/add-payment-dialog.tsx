@@ -16,9 +16,10 @@ interface Props {
   jobNumber: string
   amount: number
   customerId?: string
+  fullWidth?: boolean
 }
 
-export function AddPaymentDialog({ jobId, jobNumber, amount, customerId }: Props) {
+export function AddPaymentDialog({ jobId, jobNumber, amount, customerId, fullWidth }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [method, setMethod] = useState('cash')
@@ -50,7 +51,7 @@ export function AddPaymentDialog({ jobId, jobNumber, amount, customerId }: Props
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="shrink-0">
+        <Button size="sm" variant="outline" className={fullWidth ? 'w-full justify-start' : 'shrink-0'}>
           <DollarSign className="w-3 h-3 mr-1" />
           Record Payment
         </Button>

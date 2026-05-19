@@ -107,6 +107,7 @@ export async function addPayment(input: AddPaymentInput): Promise<{ error?: stri
     null,
     { amount: input.amount, method: input.payment_method }
   )
+  if (input.job_id) revalidatePath(`/jobs/${input.job_id}`)
   revalidatePath('/payments')
   revalidatePath('/dashboard')
   return { id: payment.id }

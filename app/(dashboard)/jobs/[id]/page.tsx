@@ -9,6 +9,7 @@ import { NotesSection } from '@/components/shared/notes-section'
 import { ActivityLogSection } from '@/components/shared/activity-log-section'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { JobStatusActions } from '@/components/jobs/job-status-actions'
+import { AddPaymentDialog } from '@/components/payments/add-payment-dialog'
 import { formatDate, formatCurrency, formatTime, buildGoogleMapsUrl } from '@/lib/utils'
 import { isAdmin } from '@/lib/auth/permissions'
 import { addNote } from '@/lib/actions/activity'
@@ -280,9 +281,13 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <Link href={`/jobs/${id}/photos`}>Upload Photos</Link>
               </Button>
               {job.payment_status !== 'paid' && (
-                <Button asChild variant="outline" size="sm" className="w-full justify-start">
-                  <Link href={`/payments?job_id=${id}`}>Record Payment</Link>
-                </Button>
+                <AddPaymentDialog
+                  jobId={id}
+                  jobNumber={job.job_number}
+                  amount={job.price ?? 0}
+                  customerId={job.customer_id ?? undefined}
+                  fullWidth
+                />
               )}
             </div>
           )}

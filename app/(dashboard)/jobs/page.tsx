@@ -36,9 +36,7 @@ export default async function JobsPage({
     `)
     .order("scheduled_date", { ascending: false })
 
-  if (profile.role === "worker") {
-    query = (query as any).eq('job_workers.worker_id', user.id)
-  }
+  // Workers are filtered by RLS (job_workers policy) — no extra filter needed here
 
   if (status) query = query.eq("status", status)
   if (paymentStatus) query = query.eq("payment_status", paymentStatus)

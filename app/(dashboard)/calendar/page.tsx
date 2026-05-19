@@ -31,7 +31,7 @@ export default async function CalendarPage({
   const prevWeek = format(addDays(weekStart, -7), 'yyyy-MM-dd')
   const nextWeek = format(addDays(weekStart, 7), 'yyyy-MM-dd')
 
-  let jobQuery = supabase
+  const { data: rawJobs } = await supabase
     .from('jobs')
     .select(`
       id, job_number, service_type, scheduled_date, start_time, status, payment_status, price,
@@ -43,14 +43,14 @@ export default async function CalendarPage({
     .lte('scheduled_date', format(weekEnd, 'yyyy-MM-dd'))
     .neq('status', 'cancelled')
     .order('start_time', { ascending: true, nullsFirst: true })
+    .limit(200)
 
-  if (profile.role === 'worker') {
-    jobQuery = (jobQuery as any).eq('job_workers.worker_id', user.id)
-  } else if (workerFilter) {
-    jobQuery = (jobQuery as any).eq('job_workers.worker_id', workerFilter)
-  }
-
-  const { data: jobs } = await jobQuery.limit(200)
+  // RLS handles worker isolation; filter by selected worker in JS to avoid PostgREST join filter limitations
+  const jobs = workerFilter
+    ? (rawJobs ?? []).filter((job: any) =>
+        (job.workers ?? []).some((w: any) => w.worker?.id === workerFilter)
+      )
+    : (rawJobs ?? [])
 
   // Workers for filter
   const { data: workers } = profile.role !== 'worker'
@@ -60,7 +60,7 @@ export default async function CalendarPage({
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
   function getJobsForDay(date: Date) {
-    return (jobs ?? []).filter((job: any) =>
+    return jobs.filter((job: any) =>
       isSameDay(parseISO(job.scheduled_date), date)
     )
   }

@@ -72,6 +72,7 @@ async function getDashboardData(profile: Profile) {
   const [
     newLeadsToday,
     newLeadsThisWeek,
+    newDirectJobsThisWeek,
     quotesSent,
     quotesAccepted,
     jobsToday,
@@ -89,10 +90,8 @@ async function getDashboardData(profile: Profile) {
       .select('id', { count: 'exact', head: true })
       .gte('created_at', todayStart)
       .lte('created_at', todayEnd),
-    supabase
-      .from('leads')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', weekStart),
+    supabase.from('leads').select('id', { count: 'exact', head: true }).gte('created_at', weekStart),
+    supabase.from('jobs').select('id', { count: 'exact', head: true }).is('lead_id', null).neq('status', 'cancelled').gte('created_at', weekStart),
     supabase
       .from('quotes')
       .select('id', { count: 'exact', head: true })
@@ -156,11 +155,12 @@ async function getDashboardData(profile: Profile) {
   const weekRevenue = (revenueThisWeek.data ?? []).reduce((sum, p) => sum + (p.amount ?? 0), 0)
   const monthRevenue = (revenueThisMonth.data ?? []).reduce((sum, p) => sum + (p.amount ?? 0), 0)
   const unpaidAmount = (unpaidJobs.data ?? []).reduce((sum, j) => sum + (j.price ?? 0), 0)
+  const totalNewThisWeek = (newLeadsThisWeek.count ?? 0) + (newDirectJobsThisWeek.count ?? 0)
 
   return {
     role: profile.role as 'admin' | 'manager',
     newLeadsToday: newLeadsToday.count ?? 0,
-    newLeadsThisWeek: newLeadsThisWeek.count ?? 0,
+    newLeadsThisWeek: totalNewThisWeek,
     quotesSent: quotesSent.count ?? 0,
     quotesAccepted: quotesAccepted.count ?? 0,
     jobsToday: jobsToday.count ?? 0,
