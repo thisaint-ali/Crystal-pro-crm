@@ -32,12 +32,12 @@ export default async function JobsPage({
       *,
       customer:customers(id, name),
       lead:leads(id, name),
-      assignee:profiles!jobs_assigned_to_fkey(id, full_name)
+      workers:job_workers(worker:profiles(id, full_name))
     `)
     .order("scheduled_date", { ascending: false })
 
   if (profile.role === "worker") {
-    query = query.eq("assigned_to", user.id)
+    query = (query as any).eq('job_workers.worker_id', user.id)
   }
 
   if (status) query = query.eq("status", status)
@@ -103,7 +103,7 @@ export default async function JobsPage({
                       {job.start_time && <span className="block">{formatTime(job.start_time)}</span>}
                     </td>
                     {profile.role !== "worker" && (
-                      <td className="px-4 py-3 text-gray-600 text-xs">{job.assignee?.full_name ?? "—"}</td>
+                      <td className="px-4 py-3 text-gray-600 text-xs">{job.workers?.map((w: any) => w.worker?.full_name).filter(Boolean).join(', ') || "—"}</td>
                     )}
                     <td className="px-4 py-3 font-medium">{job.price ? formatCurrency(job.price) : "—"}</td>
                     <td className="px-4 py-3"><StatusBadge status={job.status} /></td>
@@ -134,7 +134,7 @@ export default async function JobsPage({
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   {formatDate(job.scheduled_date)}
-                  {job.assignee && ` · ${job.assignee.full_name}`}
+                  {job.workers?.length > 0 && ` · ${job.workers.map((w: any) => w.worker?.full_name).filter(Boolean).join(', ')}`}
                 </p>
               </Link>
             ))}

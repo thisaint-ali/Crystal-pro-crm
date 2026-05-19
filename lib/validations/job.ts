@@ -12,7 +12,7 @@ export const jobSchema = z.object({
   scheduled_date: z.string().min(1, 'Scheduled date is required'),
   start_time: z.string().optional().or(z.literal('')),
   end_time: z.string().optional().or(z.literal('')),
-  assigned_to: z.string().uuid('Worker must be selected').min(1, 'Assign a worker'),
+  worker_ids: z.array(z.string().uuid()).min(1, 'Assign at least one worker'),
   price: z.coerce.number().min(0).optional().or(z.literal('')),
   crew_notes: z.string().max(2000).optional().or(z.literal('')),
   customer_notes: z.string().max(2000).optional().or(z.literal('')),

@@ -34,7 +34,7 @@ export interface CreateJobInput {
   scheduled_date: string
   start_time?: string
   end_time?: string
-  assigned_to: string
+  worker_ids: string[]
   price?: number
   crew_notes?: string
   customer_notes?: string
@@ -53,14 +53,18 @@ export async function createJob(input: CreateJobInput): Promise<{ error?: string
   const { data: job, error } = await supabase
     .from('jobs')
     .insert({
-      ...input,
       customer_id: input.customer_id || null,
       lead_id: input.lead_id || null,
       quote_id: input.quote_id || null,
+      service_type: input.service_type,
+      address: input.address,
       city: input.city || null,
+      state: input.state,
       zip_code: input.zip_code || null,
+      scheduled_date: input.scheduled_date,
       start_time: input.start_time || null,
       end_time: input.end_time || null,
+      assigned_to: input.worker_ids[0],
       price: input.price ?? null,
       crew_notes: input.crew_notes || null,
       customer_notes: input.customer_notes || null,
@@ -79,10 +83,16 @@ export async function createJob(input: CreateJobInput): Promise<{ error?: string
 
   if (error) return { error: error.message }
 
+  // Sync all assigned workers into junction table
+  await supabase.from('job_workers').upsert(
+    input.worker_ids.map(worker_id => ({ job_id: job.id, worker_id })),
+    { onConflict: 'job_id,worker_id' }
+  )
+
   await logActivity('job', job.id, 'job_created', null, {
     job_number: job.job_number,
     service_type: input.service_type,
-    assigned_to: input.assigned_to,
+    worker_count: input.worker_ids.length,
   })
   revalidatePath('/jobs')
   return { id: job.id }
@@ -102,12 +112,18 @@ export async function updateJob(
   const { error } = await supabase
     .from('jobs')
     .update({
-      ...input,
       customer_id: input.customer_id || null,
+      lead_id: input.lead_id || null,
+      quote_id: input.quote_id || null,
+      service_type: input.service_type,
+      address: input.address,
       city: input.city || null,
+      state: input.state,
       zip_code: input.zip_code || null,
+      scheduled_date: input.scheduled_date,
       start_time: input.start_time || null,
       end_time: input.end_time || null,
+      ...(input.worker_ids?.length ? { assigned_to: input.worker_ids[0] } : {}),
       price: input.price ?? null,
       crew_notes: input.crew_notes || null,
       customer_notes: input.customer_notes || null,
@@ -119,6 +135,14 @@ export async function updateJob(
     .eq('id', id)
 
   if (error) return { error: error.message }
+
+  // Re-sync workers in junction table if worker_ids were provided
+  if (input.worker_ids?.length) {
+    await supabase.from('job_workers').delete().eq('job_id', id)
+    await supabase.from('job_workers').insert(
+      input.worker_ids.map(worker_id => ({ job_id: id, worker_id }))
+    )
+  }
 
   await logActivity('job', id, 'job_updated')
   revalidatePath(`/jobs/${id}`)
@@ -133,10 +157,11 @@ export async function updateJobStatus(
 ): Promise<{ error?: string }> {
   const { user, profile, supabase } = await getCurrentUser()
 
-  // Workers can only update their own assigned jobs
+  // Workers can only update jobs they are assigned to
   if (profile?.role === 'worker') {
-    const { data: job } = await supabase.from('jobs').select('assigned_to').eq('id', id).single()
-    if (job?.assigned_to !== user.id) return { error: 'Permission denied' }
+    const { data: assignment } = await supabase
+      .from('job_workers').select('worker_id').eq('job_id', id).eq('worker_id', user.id).single()
+    if (!assignment) return { error: 'Permission denied' }
   } else if (!['admin', 'manager'].includes(profile?.role ?? '')) {
     return { error: 'Permission denied' }
   }

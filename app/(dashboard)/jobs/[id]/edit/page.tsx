@@ -16,10 +16,11 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
   const { data: job } = await supabase.from('jobs').select('*').eq('id', id).single()
   if (!job) notFound()
 
-  const [{ data: workers }, { data: customers }, { data: leads }] = await Promise.all([
+  const [{ data: workers }, { data: customers }, { data: leads }, { data: jobWorkers }] = await Promise.all([
     supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
     supabase.from('customers').select('id, name, phone').order('name'),
     supabase.from('leads').select('id, name, phone').order('name'),
+    supabase.from('job_workers').select('worker_id').eq('job_id', id),
   ])
 
   const updateAction = async (input: Parameters<typeof updateJob>[1]) => {
@@ -55,7 +56,8 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
           payment_status: job.payment_status as any,
           homeowner_name: job.homeowner_name ?? '',
           homeowner_phone: job.homeowner_phone ?? '',
-        }}
+          worker_ids: (jobWorkers ?? []).map((jw: any) => jw.worker_id),
+        } as any}
         onSubmit={updateAction as any}
         submitLabel="Save Changes"
         redirectTo={`/jobs/${id}`}

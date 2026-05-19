@@ -63,7 +63,7 @@ export function JobForm({
       scheduled_date: initialData?.scheduled_date ?? '',
       start_time: initialData?.start_time ?? '',
       end_time: initialData?.end_time ?? '',
-      assigned_to: initialData?.assigned_to ?? '',
+      worker_ids: (initialData as any)?.worker_ids ?? (initialData?.assigned_to ? [initialData.assigned_to] : []),
       price: initialData?.price ?? undefined,
       crew_notes: initialData?.crew_notes ?? '',
       customer_notes: initialData?.customer_notes ?? '',
@@ -90,7 +90,7 @@ export function JobForm({
       scheduled_date: data.scheduled_date,
       start_time: data.start_time || undefined,
       end_time: data.end_time || undefined,
-      assigned_to: data.assigned_to,
+      worker_ids: data.worker_ids,
       price: data.price ? Number(data.price) : undefined,
       crew_notes: data.crew_notes || undefined,
       customer_notes: data.customer_notes || undefined,
@@ -179,18 +179,31 @@ export function JobForm({
           )}
         </div>
         <div className="space-y-1.5">
-          <Label>Assigned Worker *</Label>
-          <Select value={watch('assigned_to')} onValueChange={(v) => setValue('assigned_to', v)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select worker" />
-            </SelectTrigger>
-            <SelectContent>
-              {workers.map((w) => (
-                <SelectItem key={w.id} value={w.id}>{w.full_name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.assigned_to && <p className="text-xs text-red-500">{errors.assigned_to.message}</p>}
+          <Label>Assigned Workers *</Label>
+          <div className="rounded-md border divide-y">
+            {workers.map((w) => {
+              const selected = (watch('worker_ids') ?? []).includes(w.id)
+              return (
+                <label key={w.id} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => {
+                      const current = watch('worker_ids') ?? []
+                      setValue(
+                        'worker_ids',
+                        selected ? current.filter(id => id !== w.id) : [...current, w.id],
+                        { shouldValidate: true }
+                      )
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                  />
+                  <span className="text-sm text-gray-800">{w.full_name}</span>
+                </label>
+              )
+            })}
+          </div>
+          {errors.worker_ids && <p className="text-xs text-red-500">{(errors.worker_ids as any)?.message ?? 'Assign at least one worker'}</p>}
         </div>
       </div>
 

@@ -35,14 +35,12 @@ async function getDashboardData(profile: Profile) {
       supabase
         .from('jobs')
         .select('id, service_type, address, city, status, scheduled_date, start_time, customer_id')
-        .eq('assigned_to', profile.id)
         .eq('scheduled_date', now.toISOString().split('T')[0])
         .neq('status', 'cancelled')
         .order('start_time', { ascending: true }),
       supabase
         .from('jobs')
         .select('id, service_type, address, city, status, scheduled_date, start_time, customer_id')
-        .eq('assigned_to', profile.id)
         .gt('scheduled_date', now.toISOString().split('T')[0])
         .neq('status', 'cancelled')
         .order('scheduled_date', { ascending: true })
@@ -57,7 +55,6 @@ async function getDashboardData(profile: Profile) {
       supabase
         .from('jobs')
         .select('id', { count: 'exact', head: true })
-        .eq('assigned_to', profile.id)
         .eq('status', 'completed')
         .gte('completed_at', weekStart),
     ])

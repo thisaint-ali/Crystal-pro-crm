@@ -37,7 +37,7 @@ export default async function CalendarPage({
       id, job_number, service_type, scheduled_date, start_time, status, payment_status, price,
       customer:customers(id, name),
       lead:leads(id, name),
-      assignee:profiles!jobs_assigned_to_fkey(id, full_name)
+      workers:job_workers(worker:profiles(id, full_name))
     `)
     .gte('scheduled_date', format(weekStart, 'yyyy-MM-dd'))
     .lte('scheduled_date', format(weekEnd, 'yyyy-MM-dd'))
@@ -45,9 +45,9 @@ export default async function CalendarPage({
     .order('start_time', { ascending: true, nullsFirst: true })
 
   if (profile.role === 'worker') {
-    jobQuery = jobQuery.eq('assigned_to', user.id)
+    jobQuery = (jobQuery as any).eq('job_workers.worker_id', user.id)
   } else if (workerFilter) {
-    jobQuery = jobQuery.eq('assigned_to', workerFilter)
+    jobQuery = (jobQuery as any).eq('job_workers.worker_id', workerFilter)
   }
 
   const { data: jobs } = await jobQuery.limit(200)

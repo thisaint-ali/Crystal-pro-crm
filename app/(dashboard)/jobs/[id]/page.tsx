@@ -30,7 +30,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       *,
       customer:customers(id, name, phone, email, address, city, state),
       lead:leads(id, name, phone, email, address, city, state),
-      assignee:profiles!jobs_assigned_to_fkey(id, full_name),
+      workers:job_workers(worker:profiles(id, full_name)),
       quote:quotes(id, quote_number),
       photos:job_photos(*)
     `)
@@ -125,8 +125,10 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 )}
               </div>
               <div>
-                <p className="text-xs text-gray-500">Assigned To</p>
-                <p className="font-medium">{(job.assignee as any)?.full_name ?? '—'}</p>
+                <p className="text-xs text-gray-500">{(job.workers as any)?.length > 1 ? 'Workers' : 'Worker'}</p>
+                <p className="font-medium">
+                  {(job.workers as any)?.map((w: any) => w.worker?.full_name).filter(Boolean).join(', ') || '—'}
+                </p>
               </div>
               {job.completed_at && (
                 <div>
