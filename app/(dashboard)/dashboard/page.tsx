@@ -12,7 +12,7 @@ import {
   Clock,
   FileText,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,7 +22,7 @@ import { startOfDay, startOfWeek, startOfMonth, endOfDay, format } from 'date-fn
 import type { Profile, Job, Lead, Task } from '@/types/crm'
 
 async function getDashboardData(profile: Profile) {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const now = new Date()
   const todayStart = startOfDay(now).toISOString()
   const todayEnd = endOfDay(now).toISOString()

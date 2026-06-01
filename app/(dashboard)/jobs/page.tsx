@@ -1,7 +1,7 @@
 ﻿import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Plus } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createServiceClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { EmptyState } from "@/components/shared/empty-state"
@@ -26,24 +26,31 @@ export default async function JobsPage({
   const paymentStatus = params.payment ?? ""
   const dateFilter = params.date ?? ""
 
-  let query = supabase
+  // Use service role client for data queries — auth already verified above
+  // Workers see only their own jobs; admins/managers see all
+  const db = createServiceClient()
+  let baseQuery = db
     .from("jobs")
     .select(`
-      *,
+      id, job_number, service_type, address, city, state, scheduled_date, start_time,
+      status, payment_status, price, customer_id, lead_id, assigned_to,
       customer:customers(id, name),
       lead:leads(id, name),
       assigned_worker:profiles!jobs_assigned_to_fkey(id, full_name)
     `)
     .order("scheduled_date", { ascending: false })
 
-  // Workers are filtered by RLS (job_workers policy) — no extra filter needed here
+  // Workers only see their own jobs
+  if (profile.role === "worker") {
+    baseQuery = baseQuery.eq("assigned_to", profile.id)
+  }
 
-  if (status) query = query.eq("status", status)
-  if (paymentStatus) query = query.eq("payment_status", paymentStatus)
-  if (dateFilter) query = query.eq("scheduled_date", dateFilter)
-  if (search) query = query.or(`service_type.ilike.%${search}%,job_number.ilike.%${search}%,address.ilike.%${search}%`)
+  if (status) baseQuery = baseQuery.eq("status", status)
+  if (paymentStatus) baseQuery = baseQuery.eq("payment_status", paymentStatus)
+  if (dateFilter) baseQuery = baseQuery.eq("scheduled_date", dateFilter)
+  if (search) baseQuery = baseQuery.or(`service_type.ilike.%${search}%,job_number.ilike.%${search}%,address.ilike.%${search}%`)
 
-  const { data: jobs, error: jobsError } = await query.limit(100)
+  const { data: jobs, error: jobsError } = await baseQuery.limit(100)
 
   const isAdminOrManager = ["admin", "manager"].includes(profile.role)
 
@@ -99,14 +106,14 @@ export default async function JobsPage({
                     <td className="px-4 py-3">
                       <Link href={`/jobs/${job.id}`} className="font-medium text-blue-600 hover:underline">{job.job_number}</Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{job.customer?.name ?? job.lead?.name ?? "—"}</td>
+                    <td className="px-4 py-3 text-gray-700">{(job.customer as any)?.name ?? (job.lead as any)?.name ?? "—"}</td>
                     <td className="px-4 py-3 text-gray-600">{job.service_type}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
                       {formatDate(job.scheduled_date)}
                       {job.start_time && <span className="block">{formatTime(job.start_time)}</span>}
                     </td>
                     {profile.role !== "worker" && (
-                      <td className="px-4 py-3 text-gray-600 text-xs">{(job.assigned_worker as any)?.full_name || "—"}</td>
+                      <td className="px-4 py-3 text-gray-600 text-xs">{(job.assigned_worker as any)?.full_name ?? "—"}</td>
                     )}
                     <td className="px-4 py-3 font-medium">{job.price ? formatCurrency(job.price) : "—"}</td>
                     <td className="px-4 py-3"><StatusBadge status={job.status} /></td>

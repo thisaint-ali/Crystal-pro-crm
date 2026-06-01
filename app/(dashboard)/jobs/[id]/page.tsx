@@ -1,7 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Edit, Trash2, MapPin, ExternalLink, Camera } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { PageHeader } from '@/components/shared/page-header'
@@ -24,8 +24,11 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
   if (!profile) redirect('/login')
 
-  // Workers can only access their assigned jobs (RLS enforces this, but also redirect)
-  const { data: job } = await supabase
+  // Use service client for data — auth already verified above
+  const db = createServiceClient()
+
+  // Workers can only access their assigned jobs
+  let jobQuery = db
     .from('jobs')
     .select(`
       *,
@@ -36,18 +39,23 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       photos:job_photos(*)
     `)
     .eq('id', id)
-    .single()
+
+  if (profile.role === 'worker') {
+    jobQuery = jobQuery.eq('assigned_to', profile.id)
+  }
+
+  const { data: job } = await jobQuery.single()
 
   if (!job) notFound()
 
   const [{ data: notes }, { data: activities }] = await Promise.all([
-    supabase
+    db
       .from('notes')
       .select('*, author:profiles!notes_created_by_fkey(id, full_name)')
       .eq('entity_type', 'job')
       .eq('entity_id', id)
       .order('created_at', { ascending: false }),
-    supabase
+    db
       .from('activity_log')
       .select('*, user:profiles!activity_log_user_id_fkey(id, full_name)')
       .eq('entity_type', 'job')

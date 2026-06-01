@@ -1,7 +1,7 @@
 ﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { formatTime } from '@/lib/utils'
 import { addDays, startOfWeek, format, parseISO, isSameDay } from 'date-fns'
@@ -31,7 +31,8 @@ export default async function CalendarPage({
   const prevWeek = format(addDays(weekStart, -7), 'yyyy-MM-dd')
   const nextWeek = format(addDays(weekStart, 7), 'yyyy-MM-dd')
 
-  const { data: rawJobs } = await supabase
+  const db = createServiceClient()
+  let jobsQuery = db
     .from('jobs')
     .select(`
       id, job_number, service_type, scheduled_date, start_time, status, payment_status, price,
@@ -46,6 +47,13 @@ export default async function CalendarPage({
     .order('start_time', { ascending: true, nullsFirst: true })
     .limit(200)
 
+  // Workers only see their own jobs
+  if (profile.role === 'worker') {
+    jobsQuery = jobsQuery.eq('assigned_to', profile.id)
+  }
+
+  const { data: rawJobs } = await jobsQuery
+
   // Filter by selected worker in JS
   const jobs = workerFilter
     ? (rawJobs ?? []).filter((job: any) => job.assigned_to === workerFilter)
@@ -53,7 +61,7 @@ export default async function CalendarPage({
 
   // Workers for filter
   const { data: workers } = profile.role !== 'worker'
-    ? await supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name')
+    ? await db.from('profiles').select('id, full_name').eq('active', true).order('full_name')
     : { data: null }
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
