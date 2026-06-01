@@ -1,5 +1,5 @@
 import { redirect, notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/shared/page-header'
 import { QuoteForm } from '@/components/quotes/quote-form'
 import { updateQuote } from '@/lib/actions/quotes'
@@ -7,13 +7,14 @@ import { updateQuote } from '@/lib/actions/quotes'
 export default async function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+  const db = createServiceClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
 
-  const { data: quote } = await supabase
+  const { data: quote } = await db
     .from('quotes')
     .select('*, items:quote_items(*)')
     .eq('id', id)
@@ -22,8 +23,8 @@ export default async function EditQuotePage({ params }: { params: Promise<{ id: 
   if (!quote) notFound()
 
   const [{ data: leads }, { data: customers }] = await Promise.all([
-    supabase.from('leads').select('id, name, phone, address, city').order('name'),
-    supabase.from('customers').select('id, name, phone, address, city').order('name'),
+    db.from('leads').select('id, name, phone, address, city').order('name'),
+    db.from('customers').select('id, name, phone, address, city').order('name'),
   ])
 
   const updateAction = async (input: Parameters<typeof updateQuote>[1]) => {

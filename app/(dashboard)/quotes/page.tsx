@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -20,11 +20,12 @@ export default async function QuotesPage({
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || profile.role === 'worker') redirect('/dashboard')
 
+  const db = createServiceClient()
   const params = await searchParams
   const search = params.search ?? ''
   const status = params.status ?? ''
 
-  let query = supabase
+  let query = db
     .from('quotes')
     .select(`
       *,

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/shared/page-header'
 import { JobForm } from '@/components/jobs/job-form'
 import { createJob } from '@/lib/actions/jobs'
@@ -10,10 +10,11 @@ export default async function NewJobPage({
   searchParams: Promise<Record<string, string>>
 }) {
   const supabase = await createClient()
+  const db = createServiceClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
 
   const params = await searchParams
@@ -22,9 +23,9 @@ export default async function NewJobPage({
   const defaultQuoteId = params.quote_id ?? ''
 
   const [{ data: workers }, { data: customers }, { data: leads }] = await Promise.all([
-    supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
-    supabase.from('customers').select('id, name, phone').order('name'),
-    supabase.from('leads').select('id, name, phone').order('name'),
+    db.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
+    db.from('customers').select('id, name, phone').order('name'),
+    db.from('leads').select('id, name, phone').order('name'),
   ])
 
   // Pre-fill address + homeowner info from customer or lead if available
@@ -33,7 +34,7 @@ export default async function NewJobPage({
   let defaultHomeownerName = ''
   let defaultHomeownerPhone = ''
   if (defaultCustomerId) {
-    const { data: customer } = await supabase
+    const { data: customer } = await db
       .from('customers')
       .select('address, city, name, phone')
       .eq('id', defaultCustomerId)
@@ -43,7 +44,7 @@ export default async function NewJobPage({
     defaultHomeownerName = customer?.name ?? ''
     defaultHomeownerPhone = customer?.phone ?? ''
   } else if (defaultLeadId) {
-    const { data: lead } = await supabase
+    const { data: lead } = await db
       .from('leads')
       .select('address, city, name, phone')
       .eq('id', defaultLeadId)

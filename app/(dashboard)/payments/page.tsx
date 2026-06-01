@@ -1,6 +1,6 @@
 ﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -22,8 +22,10 @@ export default async function PaymentsPage({
   const params = await searchParams
   const tab = params.tab ?? 'unpaid'
 
+  const db = createServiceClient()
+
   // Unpaid jobs needing payment collection
-  const { data: unpaidJobs } = await supabase
+  const { data: unpaidJobs } = await db
     .from('jobs')
     .select(`
       *,
@@ -36,7 +38,7 @@ export default async function PaymentsPage({
     .limit(50)
 
   // Recent payments
-  const { data: payments } = await supabase
+  const { data: payments } = await db
     .from('payments')
     .select(`
       *,

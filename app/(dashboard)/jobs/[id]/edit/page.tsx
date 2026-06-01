@@ -1,5 +1,5 @@
 import { redirect, notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/shared/page-header'
 import { JobForm } from '@/components/jobs/job-form'
 import { updateJob } from '@/lib/actions/jobs'
@@ -13,14 +13,15 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
 
-  const { data: job } = await supabase.from('jobs').select('*').eq('id', id).single()
+  const { data: job } = await db.from('jobs').select('*').eq('id', id).single()
   if (!job) notFound()
 
+  const db = createServiceClient()
   const [{ data: workers }, { data: customers }, { data: leads }, { data: jobWorkers }] = await Promise.all([
-    supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
-    supabase.from('customers').select('id, name, phone').order('name'),
-    supabase.from('leads').select('id, name, phone').order('name'),
-    supabase.from('job_workers').select('worker_id').eq('job_id', id),
+    db.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
+    db.from('customers').select('id, name, phone').order('name'),
+    db.from('leads').select('id, name, phone').order('name'),
+    db.from('job_workers').select('worker_id').eq('job_id', id),
   ])
 
   const updateAction = async (input: Parameters<typeof updateJob>[1]) => {

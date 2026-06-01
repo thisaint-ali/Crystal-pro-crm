@@ -1,5 +1,5 @@
 ﻿import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
 import type { MapPin } from '@/components/map/crm-map'
 import { MapWrapper } from '@/components/map/map-wrapper'
@@ -21,15 +21,16 @@ export default async function MapPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single() as { data: { role: string } | null }
   if (!profile || profile.role === 'worker') redirect('/dashboard')
 
+  const db = createServiceClient()
   const [{ data: jobs }, { data: leads }] = await Promise.all([
-    supabase
+    db
       .from('jobs')
       .select('id, job_number, service_type, address, city, state, status, scheduled_date, latitude, longitude, customer:customers(name), lead:leads(name)')
       .not('latitude', 'is', null)
       .not('status', 'eq', 'cancelled')
       .order('scheduled_date', { ascending: false })
       .limit(500),
-    supabase
+    db
       .from('leads')
       .select('id, name, service_requested, address, city, state, status, latitude, longitude')
       .not('latitude', 'is', null)

@@ -1,7 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Edit, Trash2, ExternalLink } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { PageHeader } from '@/components/shared/page-header'
@@ -17,13 +17,14 @@ import { deleteQuote } from '@/lib/actions/quotes'
 export default async function QuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+  const db = createServiceClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single()
   if (!profile || profile.role === 'worker') redirect('/dashboard')
 
-  const { data: quote } = await supabase
+  const { data: quote } = await db
     .from('quotes')
     .select(`
       *,
@@ -37,13 +38,13 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   if (!quote) notFound()
 
   const [{ data: notes }, { data: activities }] = await Promise.all([
-    supabase
+    db
       .from('notes')
       .select('*, author:profiles!notes_created_by_fkey(id, full_name)')
       .eq('entity_type', 'quote')
       .eq('entity_id', id)
       .order('created_at', { ascending: false }),
-    supabase
+    db
       .from('activity_log')
       .select('*, user:profiles!activity_log_user_id_fkey(id, full_name)')
       .eq('entity_type', 'quote')

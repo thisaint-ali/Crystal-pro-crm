@@ -1,5 +1,5 @@
 ﻿import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { TeamActions } from '@/components/team/team-actions'
 import { formatDate } from '@/lib/utils'
 import { ROLES } from '@/lib/constants'
@@ -12,7 +12,8 @@ export default async function TeamPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
-  const { data: members } = await supabase
+  const db = createServiceClient()
+  const { data: members } = await db
     .from('profiles')
     .select('*')
     .order('created_at')

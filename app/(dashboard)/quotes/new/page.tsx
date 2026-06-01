@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/shared/page-header'
 import { QuoteForm } from '@/components/quotes/quote-form'
 import { createQuote } from '@/lib/actions/quotes'
@@ -16,13 +16,14 @@ export default async function NewQuotePage({
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
 
+  const db = createServiceClient()
   const params = await searchParams
   const defaultLeadId = params.lead_id ?? ''
   const defaultCustomerId = params.customer_id ?? ''
 
   const [{ data: leads }, { data: customers }] = await Promise.all([
-    supabase.from('leads').select('id, name, phone, address, city').order('name'),
-    supabase.from('customers').select('id, name, phone, address, city').order('name'),
+    db.from('leads').select('id, name, phone, address, city').order('name'),
+    db.from('customers').select('id, name, phone, address, city').order('name'),
   ])
 
   return (

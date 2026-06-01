@@ -1,5 +1,5 @@
 import { redirect, notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/shared/page-header'
 import { LeadForm } from '@/components/leads/lead-form'
 import { updateLead } from '@/lib/actions/leads'
@@ -7,6 +7,7 @@ import { updateLead } from '@/lib/actions/leads'
 export default async function EditLeadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+  const db = createServiceClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -15,10 +16,10 @@ export default async function EditLeadPage({ params }: { params: Promise<{ id: s
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
 
-  const { data: lead } = await supabase.from('leads').select('*').eq('id', id).single()
+  const { data: lead } = await db.from('leads').select('*').eq('id', id).single()
   if (!lead) notFound()
 
-  const { data: teamMembers } = await supabase
+  const { data: teamMembers } = await db
     .from('profiles')
     .select('id, full_name')
     .eq('active', true)

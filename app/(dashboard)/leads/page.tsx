@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Search, Phone, MapPin } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -31,8 +31,10 @@ export default async function LeadsPage({
   const assigned = params.assigned ?? ''
   const sort = params.sort ?? 'created_at'
 
+  const db = createServiceClient()
+
   // Build query
-  let query = supabase
+  let query = db
     .from('leads')
     .select('*, assignee:profiles!leads_assigned_to_fkey(id, full_name)')
     .order(sort === 'follow_up' ? 'next_follow_up_at' : sort === 'priority' ? 'priority' : 'created_at', {
@@ -51,7 +53,7 @@ export default async function LeadsPage({
   const { data: leads } = await query.limit(100)
 
   // Fetch team members for assign filter
-  const { data: teamMembers } = await supabase
+  const { data: teamMembers } = await db
     .from('profiles')
     .select('id, full_name, role')
     .eq('active', true)

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/shared/page-header'
 import { LeadForm } from '@/components/leads/lead-form'
 import { createLead } from '@/lib/actions/leads'
@@ -14,7 +14,7 @@ export default async function NewLeadPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
 
-  const { data: teamMembers } = await supabase
+  const { data: teamMembers } = await db
     .from('profiles')
     .select('id, full_name')
     .eq('active', true)

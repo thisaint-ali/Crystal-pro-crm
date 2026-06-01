@@ -1,5 +1,5 @@
 import { redirect, notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/shared/page-header'
 import { CustomerForm } from '@/components/customers/customer-form'
 import { updateCustomer } from '@/lib/actions/customers'
@@ -13,9 +13,10 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
 
-  const { data: customer } = await supabase.from('customers').select('*').eq('id', id).single()
+  const { data: customer } = await db.from('customers').select('*').eq('id', id).single()
   if (!customer) notFound()
 
+  const db = createServiceClient()
   const updateAction = async (formData: FormData) => {
     'use server'
     return updateCustomer(id, formData)

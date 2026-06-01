@@ -1,7 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Phone, MapPin, Mail, Edit, Plus, ExternalLink, Building2, Home, Trash2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { PageHeader } from '@/components/shared/page-header'
@@ -22,14 +22,15 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
   if (!profile || profile.role === 'worker') redirect('/dashboard')
 
-  const { data: customer } = await supabase.from('customers').select('*').eq('id', id).single()
+  const { data: customer } = await db.from('customers').select('*').eq('id', id).single()
   if (!customer) notFound()
 
+  const db = createServiceClient()
   const [{ data: jobs }, { data: quotes }, { data: notes }, { data: activities }] = await Promise.all([
-    supabase.from('jobs').select('id, job_number, service_type, scheduled_date, status, payment_status, price').eq('customer_id', id).order('scheduled_date', { ascending: false }).limit(10),
-    supabase.from('quotes').select('id, quote_number, service_type, final_amount, status, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(5),
-    supabase.from('notes').select('*, author:profiles!notes_created_by_fkey(id, full_name)').eq('entity_type', 'customer').eq('entity_id', id).order('created_at', { ascending: false }),
-    supabase.from('activity_log').select('*, user:profiles!activity_log_user_id_fkey(id, full_name)').eq('entity_type', 'customer').eq('entity_id', id).order('created_at', { ascending: false }).limit(15),
+    db.from('jobs').select('id, job_number, service_type, scheduled_date, status, payment_status, price').eq('customer_id', id).order('scheduled_date', { ascending: false }).limit(10),
+    db.from('quotes').select('id, quote_number, service_type, final_amount, status, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(5),
+    db.from('notes').select('*, author:profiles!notes_created_by_fkey(id, full_name)').eq('entity_type', 'customer').eq('entity_id', id).order('created_at', { ascending: false }),
+    db.from('activity_log').select('*, user:profiles!activity_log_user_id_fkey(id, full_name)').eq('entity_type', 'customer').eq('entity_id', id).order('created_at', { ascending: false }).limit(15),
   ])
 
   const addNoteAction = async (note: string) => { 'use server'; return addNote('customer', id, note) }

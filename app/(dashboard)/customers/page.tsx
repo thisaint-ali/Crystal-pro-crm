@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Phone, MapPin, Building2, Home } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -27,7 +27,8 @@ export default async function CustomersPage({
   const type = params.type ?? ''
   const city = params.city ?? ''
 
-  let query = supabase.from('customers').select('*').order('name', { ascending: true })
+  const db = createServiceClient()
+  let query = db.from('customers').select('*').order('name', { ascending: true })
 
   if (search) {
     query = query.or(

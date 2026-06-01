@@ -1,12 +1,13 @@
 ﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ReviewActions } from '@/components/reviews/review-actions'
 import { formatDate } from '@/lib/utils'
 
 export default async function ReviewsPage() {
   const supabase = await createClient()
+  const db = createServiceClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
@@ -14,7 +15,7 @@ export default async function ReviewsPage() {
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
 
   // Jobs paid but review not yet requested
-  const { data: eligibleJobs } = await supabase
+  const { data: eligibleJobs } = await db
     .from('jobs')
     .select('id, job_number, service_type, customer:customers(id, name), completed_at')
     .eq('payment_status', 'paid')
@@ -25,7 +26,7 @@ export default async function ReviewsPage() {
     .limit(50)
 
   // Reviews already requested
-  const { data: reviews } = await supabase
+  const { data: reviews } = await db
     .from('reviews')
     .select(`
       *,

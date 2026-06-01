@@ -1,6 +1,6 @@
 ﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { EmptyState } from '@/components/shared/empty-state'
 import { TaskActions } from '@/components/tasks/task-actions'
@@ -18,10 +18,11 @@ export default async function TasksPage({
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
   if (!profile) redirect('/login')
 
+  const db = createServiceClient()
   const params = await searchParams
   const tab = params.tab ?? 'open'
 
-  let query = supabase
+  let query = db
     .from('tasks')
     .select(`
       *,

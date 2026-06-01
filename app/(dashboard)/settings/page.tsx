@@ -1,5 +1,5 @@
 ﻿import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { SettingsForm } from '@/components/settings/settings-form'
 import { updateSettings } from '@/lib/actions/settings'
 
@@ -11,7 +11,8 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
-  const { data: settings } = await supabase.from('company_settings').select('*').single()
+  const db = createServiceClient()
+  const { data: settings } = await db.from('company_settings').select('*').single()
 
   return (
     <div className="p-4 lg:p-6 max-w-2xl">

@@ -12,7 +12,7 @@ import {
   Trash2,
   ExternalLink,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { PageHeader } from '@/components/shared/page-header'
@@ -38,16 +38,17 @@ import { deleteLead } from '@/lib/actions/leads'
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+  const db = createServiceClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single()
   if (!profile || profile.role === 'worker') redirect('/dashboard')
 
   // Fetch lead with related data
-  const { data: lead } = await supabase
+  const { data: lead } = await db
     .from('leads')
     .select('*, assignee:profiles!leads_assigned_to_fkey(id, full_name, phone)')
     .eq('id', id)
@@ -56,14 +57,14 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   if (!lead) notFound()
 
   // Fetch related quotes
-  const { data: quotes } = await supabase
+  const { data: quotes } = await db
     .from('quotes')
     .select('id, quote_number, service_type, final_amount, status, created_at')
     .eq('lead_id', id)
     .order('created_at', { ascending: false })
 
   // Fetch notes
-  const { data: notes } = await supabase
+  const { data: notes } = await db
     .from('notes')
     .select('*, author:profiles!notes_created_by_fkey(id, full_name)')
     .eq('entity_type', 'lead')
@@ -71,7 +72,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     .order('created_at', { ascending: false })
 
   // Fetch activity
-  const { data: activities } = await supabase
+  const { data: activities } = await db
     .from('activity_log')
     .select('*, user:profiles!activity_log_user_id_fkey(id, full_name)')
     .eq('entity_type', 'lead')
@@ -80,7 +81,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     .limit(20)
 
   // Check if a customer was already created from this lead
-  const { data: existingCustomer } = await supabase
+  const { data: existingCustomer } = await db
     .from('customers')
     .select('id, name')
     .eq('created_from_lead_id', id)
