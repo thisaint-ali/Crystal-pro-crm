@@ -32,7 +32,7 @@ export default async function JobsPage({
       *,
       customer:customers(id, name),
       lead:leads(id, name),
-      workers:job_workers(worker:profiles(id, full_name))
+      assigned_worker:profiles!jobs_assigned_to_fkey(id, full_name)
     `)
     .order("scheduled_date", { ascending: false })
 
@@ -101,7 +101,7 @@ export default async function JobsPage({
                       {job.start_time && <span className="block">{formatTime(job.start_time)}</span>}
                     </td>
                     {profile.role !== "worker" && (
-                      <td className="px-4 py-3 text-gray-600 text-xs">{job.workers?.map((w: any) => w.worker?.full_name).filter(Boolean).join(', ') || "—"}</td>
+                      <td className="px-4 py-3 text-gray-600 text-xs">{(job.assigned_worker as any)?.full_name || "—"}</td>
                     )}
                     <td className="px-4 py-3 font-medium">{job.price ? formatCurrency(job.price) : "—"}</td>
                     <td className="px-4 py-3"><StatusBadge status={job.status} /></td>
@@ -132,7 +132,7 @@ export default async function JobsPage({
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   {formatDate(job.scheduled_date)}
-                  {job.workers?.length > 0 && ` · ${job.workers.map((w: any) => w.worker?.full_name).filter(Boolean).join(', ')}`}
+                  {(job.assigned_worker as any)?.full_name && ` · ${(job.assigned_worker as any).full_name}`}
                 </p>
               </Link>
             ))}

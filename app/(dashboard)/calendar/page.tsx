@@ -35,9 +35,10 @@ export default async function CalendarPage({
     .from('jobs')
     .select(`
       id, job_number, service_type, scheduled_date, start_time, status, payment_status, price,
+      assigned_to,
       customer:customers(id, name),
       lead:leads(id, name),
-      workers:job_workers(worker:profiles(id, full_name))
+      assigned_worker:profiles!jobs_assigned_to_fkey(id, full_name)
     `)
     .gte('scheduled_date', format(weekStart, 'yyyy-MM-dd'))
     .lte('scheduled_date', format(weekEnd, 'yyyy-MM-dd'))
@@ -45,11 +46,9 @@ export default async function CalendarPage({
     .order('start_time', { ascending: true, nullsFirst: true })
     .limit(200)
 
-  // RLS handles worker isolation; filter by selected worker in JS to avoid PostgREST join filter limitations
+  // Filter by selected worker in JS
   const jobs = workerFilter
-    ? (rawJobs ?? []).filter((job: any) =>
-        (job.workers ?? []).some((w: any) => w.worker?.id === workerFilter)
-      )
+    ? (rawJobs ?? []).filter((job: any) => job.assigned_to === workerFilter)
     : (rawJobs ?? [])
 
   // Workers for filter

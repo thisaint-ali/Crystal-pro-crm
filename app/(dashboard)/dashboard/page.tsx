@@ -18,7 +18,7 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/utils'
 import { isAdmin, isManager } from '@/lib/auth/permissions'
-import { startOfDay, startOfWeek, startOfMonth, endOfDay } from 'date-fns'
+import { startOfDay, startOfWeek, startOfMonth, endOfDay, format } from 'date-fns'
 import type { Profile, Job, Lead, Task } from '@/types/crm'
 
 async function getDashboardData(profile: Profile) {
@@ -27,6 +27,8 @@ async function getDashboardData(profile: Profile) {
   const todayStart = startOfDay(now).toISOString()
   const todayEnd = endOfDay(now).toISOString()
   const weekStart = startOfWeek(now, { weekStartsOn: 1 }).toISOString()
+  const weekStartDate = format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+  const todayDate = format(now, 'yyyy-MM-dd')
   const monthStart = startOfMonth(now).toISOString()
 
   if (profile.role === 'worker') {
@@ -35,13 +37,13 @@ async function getDashboardData(profile: Profile) {
       supabase
         .from('jobs')
         .select('id, service_type, address, city, status, scheduled_date, start_time, customer_id')
-        .eq('scheduled_date', now.toISOString().split('T')[0])
+        .eq('scheduled_date', todayDate)
         .neq('status', 'cancelled')
         .order('start_time', { ascending: true }),
       supabase
         .from('jobs')
         .select('id, service_type, address, city, status, scheduled_date, start_time, customer_id')
-        .gt('scheduled_date', now.toISOString().split('T')[0])
+        .gt('scheduled_date', todayDate)
         .neq('status', 'cancelled')
         .order('scheduled_date', { ascending: true })
         .limit(5),
@@ -103,12 +105,12 @@ async function getDashboardData(profile: Profile) {
     supabase
       .from('jobs')
       .select('id', { count: 'exact', head: true })
-      .eq('scheduled_date', now.toISOString().split('T')[0])
+      .eq('scheduled_date', todayDate)
       .neq('status', 'cancelled'),
     supabase
       .from('jobs')
       .select('id', { count: 'exact', head: true })
-      .gte('scheduled_date', weekStart)
+      .gte('scheduled_date', weekStartDate)
       .neq('status', 'cancelled'),
     supabase
       .from('payments')
@@ -131,7 +133,7 @@ async function getDashboardData(profile: Profile) {
       .from('tasks')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'open')
-      .lte('due_date', now.toISOString().split('T')[0]),
+      .lte('due_date', todayDate),
     supabase
       .from('leads')
       .select('id, name, phone, status, service_requested, created_at, lead_source')
@@ -142,7 +144,7 @@ async function getDashboardData(profile: Profile) {
       .select('id, job_number, service_type, address, city, status, payment_status, scheduled_date')
       .neq('status', 'cancelled')
       .order('scheduled_date', { ascending: true })
-      .gte('scheduled_date', now.toISOString().split('T')[0])
+      .gte('scheduled_date', todayDate)
       .limit(5),
     supabase
       .from('tasks')

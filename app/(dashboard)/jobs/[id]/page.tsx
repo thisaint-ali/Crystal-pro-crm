@@ -31,7 +31,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       *,
       customer:customers(id, name, phone, email, address, city, state),
       lead:leads(id, name, phone, email, address, city, state),
-      workers:job_workers(worker:profiles(id, full_name)),
+      assigned_worker:profiles!jobs_assigned_to_fkey(id, full_name),
       quote:quotes(id, quote_number),
       photos:job_photos(*)
     `)
@@ -126,9 +126,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 )}
               </div>
               <div>
-                <p className="text-xs text-gray-500">{(job.workers as any)?.length > 1 ? 'Workers' : 'Worker'}</p>
+                <p className="text-xs text-gray-500">Worker</p>
                 <p className="font-medium">
-                  {(job.workers as any)?.map((w: any) => w.worker?.full_name).filter(Boolean).join(', ') || '—'}
+                  {(job.assigned_worker as any)?.full_name || '—'}
                 </p>
               </div>
               {job.completed_at && (
