@@ -43,7 +43,7 @@ export default async function JobsPage({
   if (dateFilter) query = query.eq("scheduled_date", dateFilter)
   if (search) query = query.or(`service_type.ilike.%${search}%,job_number.ilike.%${search}%,address.ilike.%${search}%`)
 
-  const { data: jobs } = await query.limit(100)
+  const { data: jobs, error: jobsError } = await query.limit(100)
 
   const isAdminOrManager = ["admin", "manager"].includes(profile.role)
 
@@ -63,6 +63,11 @@ export default async function JobsPage({
 
       <JobsFilters currentSearch={search} currentStatus={status} currentPayment={paymentStatus} currentDate={dateFilter} />
 
+      {jobsError && (
+        <div className="bg-red-50 border border-red-200 rounded p-3 mb-4 text-xs text-red-700">
+          Query error: {jobsError.message} (code: {jobsError.code})
+        </div>
+      )}
       {!jobs || jobs.length === 0 ? (
         <EmptyState
           title="No jobs found"
