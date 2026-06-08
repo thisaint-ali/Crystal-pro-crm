@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { JobsFilters } from "@/components/jobs/jobs-filters"
 import { formatDate, formatCurrency, formatTime } from "@/lib/utils"
 import { PaymentStatusSelect } from "@/components/jobs/payment-status-select"
+import { JobStatusSelect } from "@/components/jobs/job-status-select"
 
 export default async function JobsPage({
   searchParams,
@@ -118,7 +119,9 @@ export default async function JobsPage({
                       <td className="px-4 py-3 text-gray-600 text-xs">{(job.assigned_worker as any)?.full_name ?? "—"}</td>
                     )}
                     {canSeeMoney && <td className="px-4 py-3 font-medium">{job.price ? formatCurrency(job.price) : "—"}</td>}
-                    <td className="px-4 py-3"><StatusBadge status={job.status} /></td>
+                    <td className="px-4 py-3">
+                      <JobStatusSelect jobId={job.id} currentStatus={job.status} />
+                    </td>
                     {canSeeMoney && (
                       <td className="px-4 py-3">
                         <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />
@@ -140,8 +143,8 @@ export default async function JobsPage({
                     <p className="text-sm text-gray-600">{job.customer?.name ?? job.lead?.name ?? "—"}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <StatusBadge status={job.status} />
-                    {canSeeMoney && <StatusBadge status={job.payment_status} />}
+                    <JobStatusSelect jobId={job.id} currentStatus={job.status} />
+                    {canSeeMoney && <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />}
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
