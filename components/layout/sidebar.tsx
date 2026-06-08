@@ -53,6 +53,7 @@ function getNavItems(role: string): NavItem[] {
     { href: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
     { href: '/jobs', label: 'Jobs', icon: 'Briefcase' },
     { href: '/calendar', label: 'Calendar', icon: 'Calendar' },
+    { href: '/map', label: 'Map', icon: 'Map' },
     { href: '/tasks', label: 'Tasks', icon: 'CheckSquare' },
   ]
 
