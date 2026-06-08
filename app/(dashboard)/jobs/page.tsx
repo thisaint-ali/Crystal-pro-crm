@@ -1,6 +1,6 @@
 ﻿import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Plus } from "lucide-react"
+import { Plus, Pencil } from "lucide-react"
 import { createClient, createServiceClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -95,12 +95,13 @@ export default async function JobsPage({
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Customer</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Service</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                  {profile.role !== "worker" && (
+                  {profile.role !== "technician" && (
                     <th className="text-left px-4 py-3 font-medium text-gray-600">Technician</th>
                   )}
                   {canSeeMoney && <th className="text-left px-4 py-3 font-medium text-gray-600">Price</th>}
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
                   {canSeeMoney && <th className="text-left px-4 py-3 font-medium text-gray-600">Payment</th>}
+                  {isAdminOrManager && <th className="px-4 py-3" />}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -115,7 +116,7 @@ export default async function JobsPage({
                       {formatDate(job.scheduled_date)}
                       {job.start_time && <span className="block">{formatTime(job.start_time)}</span>}
                     </td>
-                    {profile.role !== "worker" && (
+                    {profile.role !== "technician" && (
                       <td className="px-4 py-3 text-gray-600 text-xs">{(job.assigned_worker as any)?.full_name ?? "—"}</td>
                     )}
                     {canSeeMoney && <td className="px-4 py-3 font-medium">{job.price ? formatCurrency(job.price) : "—"}</td>}
@@ -127,6 +128,17 @@ export default async function JobsPage({
                         <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />
                       </td>
                     )}
+                    {isAdminOrManager && (
+                      <td className="px-4 py-3 text-right">
+                        <Link
+                          href={`/jobs/${job.id}/edit`}
+                          className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Edit
+                        </Link>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -136,13 +148,13 @@ export default async function JobsPage({
           {/* Mobile */}
           <div className="lg:hidden space-y-3">
             {jobs.map((job: any) => (
-              <Link key={job.id} href={`/jobs/${job.id}`} className="block bg-white rounded-lg border p-4 hover:shadow-md">
+              <div key={job.id} className="bg-white rounded-lg border p-4 hover:shadow-md">
                 <div className="flex items-start justify-between mb-2">
-                  <div>
+                  <Link href={`/jobs/${job.id}`} className="flex-1 min-w-0">
                     <p className="font-medium text-blue-600">{job.job_number}</p>
                     <p className="text-sm text-gray-600">{job.customer?.name ?? job.lead?.name ?? "—"}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
+                  </Link>
+                  <div className="flex flex-col items-end gap-1 ml-2">
                     <JobStatusSelect jobId={job.id} currentStatus={job.status} />
                     {canSeeMoney && <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />}
                   </div>
@@ -151,11 +163,22 @@ export default async function JobsPage({
                   <span className="text-gray-500">{job.service_type}</span>
                   {canSeeMoney && <span className="font-semibold text-gray-900">{job.price ? formatCurrency(job.price) : "—"}</span>}
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
-                  {formatDate(job.scheduled_date)}
-                  {(job.assigned_worker as any)?.full_name && ` · ${(job.assigned_worker as any).full_name}`}
-                </p>
-              </Link>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-gray-400">
+                    {formatDate(job.scheduled_date)}
+                    {(job.assigned_worker as any)?.full_name && ` · ${(job.assigned_worker as any).full_name}`}
+                  </p>
+                  {isAdminOrManager && (
+                    <Link
+                      href={`/jobs/${job.id}/edit`}
+                      className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      Edit
+                    </Link>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         </>
