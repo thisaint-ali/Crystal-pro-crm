@@ -18,6 +18,8 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/utils'
 import { isAdmin } from '@/lib/auth/permissions'
+import { updatePaymentStatus } from '@/lib/actions/jobs'
+import { MarkPaidButton } from '@/components/dashboard/mark-paid-button'
 import { startOfDay, startOfWeek, startOfMonth, endOfDay, format } from 'date-fns'
 import type { Profile, Job, Lead, Task } from '@/types/crm'
 
@@ -204,7 +206,12 @@ export default async function DashboardPage() {
     return <WorkerDashboard data={data} profile={profile as Profile} />
   }
 
-  return <AdminManagerDashboard data={data} profile={profile as Profile} />
+  const markPaidAction = async (id: string) => {
+    'use server'
+    return updatePaymentStatus(id, 'paid')
+  }
+
+  return <AdminManagerDashboard data={data} profile={profile as Profile} markPaidAction={markPaidAction} />
 }
 
 // Technician Dashboard — strictly Tasks + Schedule
@@ -323,9 +330,11 @@ function WorkerDashboard({
 function AdminManagerDashboard({
   data,
   profile,
+  markPaidAction,
 }: {
   data: Awaited<ReturnType<typeof getDashboardData>> & { role: 'admin' | 'd2d_rep' }
   profile: Profile
+  markPaidAction: (id: string) => Promise<{ error?: string }>
 }) {
   const canSeeMoney = profile.role === 'admin'
 
@@ -521,21 +530,23 @@ function AdminManagerDashboard({
               ) : (
                 <div className="space-y-2">
                   {data.unpaidJobs?.map((job: any) => (
-                    <Link
+                    <div
                       key={job.id}
-                      href={`/jobs/${job.id}`}
-                      className="flex items-center justify-between p-3 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg bg-red-50 border border-red-100"
                     >
-                      <div className="min-w-0">
+                      <Link href={`/jobs/${job.id}`} className="min-w-0 flex-1 hover:opacity-80">
                         <p className="font-medium text-sm truncate">{job.service_type}</p>
                         <p className="text-xs text-gray-500 truncate">
                           {job.address}{job.city ? `, ${job.city}` : ''}
                         </p>
+                      </Link>
+                      <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+                        <span className="text-sm font-semibold text-red-700">
+                          {formatCurrency(job.price)}
+                        </span>
+                        <MarkPaidButton jobId={job.id} action={markPaidAction} />
                       </div>
-                      <span className="text-sm font-semibold text-red-700 flex-shrink-0 ml-2">
-                        {formatCurrency(job.price)}
-                      </span>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               )}
