@@ -67,7 +67,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const contact = (job.customer as any) ?? (job.lead as any)
   const contactType = job.customer_id ? 'customer' : 'lead'
   const isAdminOrManager = ['admin', 'd2d_rep'].includes(profile.role)
-  const canSeeMoney = profile.role === 'admin'
+  const canSeeMoney = isAdminOrManager   // price + payment status visible
+  const canSeeRevenue = profile.role === 'admin'  // Add Payment, revenue stats
 
   const addNoteAction = async (note: string) => { 'use server'; return addNote('job', id, note) }
   const deleteAction = async () => { 'use server'; await deleteJob(id) }
@@ -291,7 +292,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <Button asChild variant="outline" size="sm" className="w-full justify-start">
                 <Link href={`/jobs/${id}/photos`}>Upload Photos</Link>
               </Button>
-              {canSeeMoney && job.payment_status !== 'paid' && (
+              {canSeeRevenue && job.payment_status !== 'paid' && (
                 <AddPaymentDialog
                   jobId={id}
                   jobNumber={job.job_number}

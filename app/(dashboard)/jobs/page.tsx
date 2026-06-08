@@ -55,7 +55,8 @@ export default async function JobsPage({
   const { data: jobs, error: jobsError } = await baseQuery.limit(100)
 
   const isAdminOrManager = ["admin", "d2d_rep"].includes(profile.role)
-  const canSeeMoney = profile.role === "admin"
+  const canSeeMoney = isAdminOrManager   // price + payment status on jobs
+  const canSeeRevenue = profile.role === "admin"  // aggregate revenue, payments page
 
   return (
     <div className="p-4 lg:p-6">
@@ -101,6 +102,7 @@ export default async function JobsPage({
                   {canSeeMoney && <th className="text-left px-4 py-3 font-medium text-gray-600">Price</th>}
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
                   {canSeeMoney && <th className="text-left px-4 py-3 font-medium text-gray-600">Payment</th>}
+
                   {isAdminOrManager && <th className="px-4 py-3" />}
                 </tr>
               </thead>
@@ -125,7 +127,9 @@ export default async function JobsPage({
                     </td>
                     {canSeeMoney && (
                       <td className="px-4 py-3">
-                        <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />
+                        {canSeeRevenue
+                          ? <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />
+                          : <StatusBadge status={job.payment_status} />}
                       </td>
                     )}
                     {isAdminOrManager && (
@@ -156,7 +160,9 @@ export default async function JobsPage({
                   </Link>
                   <div className="flex flex-col items-end gap-1 ml-2">
                     <JobStatusSelect jobId={job.id} currentStatus={job.status} />
-                    {canSeeMoney && <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />}
+                    {canSeeMoney && (canSeeRevenue
+                      ? <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />
+                      : <StatusBadge status={job.payment_status} />)}
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">

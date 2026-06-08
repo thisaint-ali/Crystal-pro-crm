@@ -269,7 +269,7 @@ export async function updatePaymentStatus(
   paymentStatus: string
 ): Promise<{ error?: string }> {
   const { user, profile, supabase } = await getCurrentUser()
-  if (profile?.role !== 'admin') return { error: 'Permission denied' }
+  if (!['admin', 'd2d_rep'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
 
   // Fetch job details needed for sync
   const { data: job } = await supabase
