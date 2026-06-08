@@ -46,7 +46,7 @@ export interface CreateJobInput {
 
 export async function createJob(input: CreateJobInput): Promise<{ error?: string; id?: string }> {
   const { user, profile, supabase } = await getCurrentUser()
-  if (!['admin', 'manager'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
+  if (!['admin', 'd2d_rep'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
 
   const coords = await geocodeAddress({ address: input.address, city: input.city, state: input.state, zip_code: input.zip_code })
 
@@ -103,7 +103,7 @@ export async function updateJob(
   input: Partial<CreateJobInput>
 ): Promise<{ error?: string }> {
   const { profile, supabase } = await getCurrentUser()
-  if (!['admin', 'manager'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
+  if (!['admin', 'd2d_rep'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
 
   const coords = input.address
     ? await geocodeAddress({ address: input.address, city: input.city, state: input.state, zip_code: input.zip_code })
@@ -158,11 +158,11 @@ export async function updateJobStatus(
   const { user, profile, supabase } = await getCurrentUser()
 
   // Workers can only update jobs they are assigned to
-  if (profile?.role === 'worker') {
+  if (profile?.role === 'technician') {
     const { data: assignment } = await supabase
       .from('job_workers').select('worker_id').eq('job_id', id).eq('worker_id', user.id).single()
     if (!assignment) return { error: 'Permission denied' }
-  } else if (!['admin', 'manager'].includes(profile?.role ?? '')) {
+  } else if (!['admin', 'd2d_rep'].includes(profile?.role ?? '')) {
     return { error: 'Permission denied' }
   }
 
@@ -209,7 +209,7 @@ export async function markJobPaid(
   amount: number
 ): Promise<{ error?: string }> {
   const { user, profile, supabase } = await getCurrentUser()
-  if (!['admin', 'manager'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
+  if (!['admin', 'd2d_rep'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
 
   // Update job payment status
   const { error } = await supabase
@@ -264,9 +264,31 @@ export async function markJobPaid(
   return {}
 }
 
+export async function updatePaymentStatus(
+  id: string,
+  paymentStatus: string
+): Promise<{ error?: string }> {
+  const { profile, supabase } = await getCurrentUser()
+  if (profile?.role !== 'admin') return { error: 'Permission denied' }
+
+  const { error } = await supabase
+    .from('jobs')
+    .update({ payment_status: paymentStatus })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  await logActivity('job', id, 'job_payment_status_changed', null, { payment_status: paymentStatus })
+  revalidatePath('/jobs')
+  revalidatePath(`/jobs/${id}`)
+  revalidatePath('/payments')
+  revalidatePath('/dashboard')
+  return {}
+}
+
 export async function cancelJob(id: string): Promise<{ error?: string }> {
   const { profile, supabase } = await getCurrentUser()
-  if (!['admin', 'manager'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
+  if (!['admin', 'd2d_rep'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
 
   const { error } = await supabase.from('jobs').update({ status: 'cancelled' }).eq('id', id)
   if (error) return { error: error.message }

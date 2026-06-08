@@ -34,7 +34,7 @@ export function JobStatusActions({ jobId, status, role }: Props) {
     router.refresh()
   }
 
-  const isWorker = role === 'worker'
+  const isTechnician = role === 'technician'
 
   return (
     <div className="space-y-2">
@@ -74,7 +74,7 @@ export function JobStatusActions({ jobId, status, role }: Props) {
         </Button>
       )}
 
-      {!isWorker && status !== 'completed' && status !== 'cancelled' && (
+      {!isTechnician && status !== 'completed' && status !== 'cancelled' && (
         <Button
           size="sm"
           variant="outline"

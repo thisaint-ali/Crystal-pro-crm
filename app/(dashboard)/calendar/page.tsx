@@ -48,7 +48,7 @@ export default async function CalendarPage({
     .limit(200)
 
   // Workers only see their own jobs
-  if (profile.role === 'worker') {
+  if (profile.role === 'technician') {
     jobsQuery = jobsQuery.eq('assigned_to', profile.id)
   }
 
@@ -60,7 +60,7 @@ export default async function CalendarPage({
     : (rawJobs ?? [])
 
   // Workers for filter
-  const { data: workers } = profile.role !== 'worker'
+  const { data: workers } = profile.role !== 'technician'
     ? await db.from('profiles').select('id, full_name').eq('active', true).order('full_name')
     : { data: null }
 

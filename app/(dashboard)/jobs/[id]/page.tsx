@@ -40,7 +40,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
     `)
     .eq('id', id)
 
-  if (profile.role === 'worker') {
+  if (profile.role === 'technician') {
     jobQuery = jobQuery.eq('assigned_to', profile.id)
   }
 
@@ -66,7 +66,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
   const contact = (job.customer as any) ?? (job.lead as any)
   const contactType = job.customer_id ? 'customer' : 'lead'
-  const isAdminOrManager = ['admin', 'manager'].includes(profile.role)
+  const isAdminOrManager = ['admin', 'd2d_rep'].includes(profile.role)
+  const canSeeMoney = profile.role === 'admin'
 
   const addNoteAction = async (note: string) => { 'use server'; return addNote('job', id, note) }
   const deleteAction = async () => { 'use server'; await deleteJob(id) }
@@ -110,7 +111,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <h2 className="font-semibold text-gray-900">Job Details</h2>
               <div className="flex gap-2">
                 <StatusBadge status={job.status} />
-                <StatusBadge status={job.payment_status} />
+                {canSeeMoney && <StatusBadge status={job.payment_status} />}
               </div>
             </div>
 
@@ -119,10 +120,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <p className="text-xs text-gray-500">Service</p>
                 <p className="font-medium">{job.service_type}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500">Price</p>
-                <p className="font-bold text-green-700 text-lg">{job.price ? formatCurrency(job.price) : 'TBD'}</p>
-              </div>
+              {canSeeMoney && (
+                <div>
+                  <p className="text-xs text-gray-500">Price</p>
+                  <p className="font-bold text-green-700 text-lg">{job.price ? formatCurrency(job.price) : 'TBD'}</p>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-gray-500">Scheduled</p>
                 <p className="font-medium">{formatDate(job.scheduled_date)}</p>
@@ -134,7 +137,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 )}
               </div>
               <div>
-                <p className="text-xs text-gray-500">Worker</p>
+                <p className="text-xs text-gray-500">Technician</p>
                 <p className="font-medium">
                   {(job.assigned_worker as any)?.full_name || '—'}
                 </p>
@@ -288,7 +291,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <Button asChild variant="outline" size="sm" className="w-full justify-start">
                 <Link href={`/jobs/${id}/photos`}>Upload Photos</Link>
               </Button>
-              {job.payment_status !== 'paid' && (
+              {canSeeMoney && job.payment_status !== 'paid' && (
                 <AddPaymentDialog
                   jobId={id}
                   jobNumber={job.job_number}

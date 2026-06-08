@@ -17,7 +17,7 @@ export default async function PaymentsPage({
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
+  if (!profile || profile.role !== 'admin') redirect('/dashboard')
 
   const params = await searchParams
   const tab = params.tab ?? 'unpaid'

@@ -12,7 +12,7 @@ export default async function EditQuotePage({ params }: { params: Promise<{ id: 
   if (!user) redirect('/login')
 
   const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
+  if (!profile || !['admin', 'd2d_rep'].includes(profile.role)) redirect('/dashboard')
 
   const { data: quote } = await db
     .from('quotes')

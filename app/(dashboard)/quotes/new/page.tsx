@@ -14,7 +14,7 @@ export default async function NewQuotePage({
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
+  if (!profile || !['admin', 'd2d_rep'].includes(profile.role)) redirect('/dashboard')
 
   const db = createServiceClient()
   const params = await searchParams

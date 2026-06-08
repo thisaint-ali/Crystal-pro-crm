@@ -12,7 +12,7 @@ export default async function ReviewsPage() {
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
+  if (!profile || !['admin', 'd2d_rep'].includes(profile.role)) redirect('/dashboard')
 
   // Jobs paid but review not yet requested
   const { data: eligibleJobs } = await db

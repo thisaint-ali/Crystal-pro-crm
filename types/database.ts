@@ -15,7 +15,7 @@ export type Database = {
           full_name: string | null
           email: string | null
           phone: string | null
-          role: 'admin' | 'manager' | 'worker'
+          role: 'admin' | 'd2d_rep' | 'technician'
           avatar_url: string | null
           active: boolean
           created_at: string
@@ -26,7 +26,7 @@ export type Database = {
           full_name?: string | null
           email?: string | null
           phone?: string | null
-          role?: 'admin' | 'manager' | 'worker'
+          role?: 'admin' | 'd2d_rep' | 'technician'
           avatar_url?: string | null
           active?: boolean
           created_at?: string
@@ -37,7 +37,7 @@ export type Database = {
           full_name?: string | null
           email?: string | null
           phone?: string | null
-          role?: 'admin' | 'manager' | 'worker'
+          role?: 'admin' | 'd2d_rep' | 'technician'
           avatar_url?: string | null
           active?: boolean
           created_at?: string

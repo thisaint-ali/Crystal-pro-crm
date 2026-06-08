@@ -23,7 +23,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/client'
 import { getInitials } from '@/lib/utils'
-import { isAdmin, isManager } from '@/lib/auth/permissions'
+import { isAdmin, isD2DRep } from '@/lib/auth/permissions'
+import { formatRoleLabel } from '@/types/crm'
 import type { Profile } from '@/types/crm'
 
 const ICON_MAP = {
@@ -51,10 +52,11 @@ function getNavItems(role: string): NavItem[] {
   const base: NavItem[] = [
     { href: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
     { href: '/jobs', label: 'Jobs', icon: 'Briefcase' },
+    { href: '/calendar', label: 'Calendar', icon: 'Calendar' },
     { href: '/tasks', label: 'Tasks', icon: 'CheckSquare' },
   ]
 
-  if (isAdmin(role as any) || isManager(role as any)) {
+  if (isAdmin(role as any) || isD2DRep(role as any)) {
     return [
       { href: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
       { href: '/leads', label: 'Leads', icon: 'UserPlus' },
@@ -64,10 +66,10 @@ function getNavItems(role: string): NavItem[] {
       { href: '/calendar', label: 'Calendar', icon: 'Calendar' },
       { href: '/map', label: 'Map', icon: 'Map' },
       { href: '/tasks', label: 'Tasks', icon: 'CheckSquare' },
-      { href: '/payments', label: 'Payments', icon: 'DollarSign' },
       { href: '/reviews', label: 'Reviews', icon: 'Star' },
       ...(isAdmin(role as any)
         ? ([
+            { href: '/payments', label: 'Payments', icon: 'DollarSign' },
             { href: '/team', label: 'Team', icon: 'Users2' },
             { href: '/settings', label: 'Settings', icon: 'Settings' },
           ] as NavItem[])
@@ -85,7 +87,7 @@ interface SidebarProps {
 export function Sidebar({ profile }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const navItems = getNavItems(profile?.role ?? 'worker')
+  const navItems = getNavItems(profile?.role ?? 'technician')
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -141,7 +143,7 @@ export function Sidebar({ profile }: SidebarProps) {
             <p className="text-sm font-medium truncate text-white">
               {profile?.full_name ?? 'User'}
             </p>
-            <p className="text-xs text-slate-400 capitalize">{profile?.role ?? 'worker'}</p>
+            <p className="text-xs text-slate-400">{formatRoleLabel(profile?.role)}</p>
           </div>
         </div>
         <button

@@ -11,12 +11,12 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
+  if (!profile || !['admin', 'd2d_rep'].includes(profile.role)) redirect('/dashboard')
+
+  const db = createServiceClient()
 
   const { data: job } = await db.from('jobs').select('*').eq('id', id).single()
   if (!job) notFound()
-
-  const db = createServiceClient()
   const [{ data: workers }, { data: customers }, { data: leads }, { data: jobWorkers }] = await Promise.all([
     db.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
     db.from('customers').select('id, name, phone').order('name'),

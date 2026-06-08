@@ -19,7 +19,7 @@ async function requireAdminOrManager() {
     .eq('id', user.id)
     .single()
 
-  if (!profile?.active || !['admin', 'manager'].includes(profile.role)) {
+  if (!profile?.active || !['admin', 'd2d_rep'].includes(profile.role)) {
     return { error: 'Permission denied', user: null, supabase }
   }
   return { error: null, user, supabase }

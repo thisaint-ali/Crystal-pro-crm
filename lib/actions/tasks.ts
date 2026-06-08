@@ -37,7 +37,7 @@ export interface CreateTaskInput {
 
 export async function createTask(input: CreateTaskInput): Promise<{ error?: string; id?: string }> {
   const { user, profile, supabase } = await getCurrentUser()
-  if (!['admin', 'manager'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
+  if (!['admin', 'd2d_rep'].includes(profile?.role ?? '')) return { error: 'Permission denied' }
 
   const { data: task, error } = await supabase
     .from('tasks')
@@ -76,7 +76,7 @@ export async function completeTask(id: string): Promise<{ error?: string }> {
   const { user, profile, supabase } = await getCurrentUser()
 
   // Workers can complete their own tasks
-  if (profile?.role === 'worker') {
+  if (profile?.role === 'technician') {
     const { data: task } = await supabase.from('tasks').select('assigned_to').eq('id', id).single()
     if (task?.assigned_to !== user.id) return { error: 'Permission denied' }
   }

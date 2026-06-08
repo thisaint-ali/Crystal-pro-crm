@@ -114,8 +114,8 @@ export const PHOTO_TYPES = [
 
 export const ROLES = [
   { value: 'admin', label: 'Admin' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'worker', label: 'Worker' },
+  { value: 'd2d_rep', label: 'D2D Rep' },
+  { value: 'technician', label: 'Technician' },
 ] as const
 
 // Pricing suggestions (display only, not enforced)

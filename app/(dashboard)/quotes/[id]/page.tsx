@@ -22,7 +22,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   if (!user) redirect('/login')
 
   const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single()
-  if (!profile || profile.role === 'worker') redirect('/dashboard')
+  if (!profile || profile.role === 'technician') redirect('/dashboard')
 
   const { data: quote } = await db
     .from('quotes')

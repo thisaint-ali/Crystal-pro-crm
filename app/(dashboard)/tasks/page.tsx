@@ -34,7 +34,7 @@ export default async function TasksPage({
     `)
     .order('due_date', { ascending: true, nullsFirst: false })
 
-  if (profile.role === 'worker') {
+  if (profile.role === 'technician') {
     query = query.eq('assigned_to', user.id)
   }
 
@@ -46,7 +46,7 @@ export default async function TasksPage({
 
   const { data: tasks } = await query.limit(100)
 
-  const isAdminOrManager = ['admin', 'manager'].includes(profile.role)
+  const isAdminOrManager = ['admin', 'd2d_rep'].includes(profile.role)
 
   return (
     <div className="p-4 lg:p-6">

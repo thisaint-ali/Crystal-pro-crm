@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/shared/status-badge"
 import { EmptyState } from "@/components/shared/empty-state"
 import { JobsFilters } from "@/components/jobs/jobs-filters"
 import { formatDate, formatCurrency, formatTime } from "@/lib/utils"
+import { PaymentStatusSelect } from "@/components/jobs/payment-status-select"
 
 export default async function JobsPage({
   searchParams,
@@ -52,7 +53,8 @@ export default async function JobsPage({
 
   const { data: jobs, error: jobsError } = await baseQuery.limit(100)
 
-  const isAdminOrManager = ["admin", "manager"].includes(profile.role)
+  const isAdminOrManager = ["admin", "d2d_rep"].includes(profile.role)
+  const canSeeMoney = profile.role === "admin"
 
   return (
     <div className="p-4 lg:p-6">
@@ -93,11 +95,11 @@ export default async function JobsPage({
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Service</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
                   {profile.role !== "worker" && (
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Worker</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-600">Technician</th>
                   )}
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Price</th>
+                  {canSeeMoney && <th className="text-left px-4 py-3 font-medium text-gray-600">Price</th>}
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Payment</th>
+                  {canSeeMoney && <th className="text-left px-4 py-3 font-medium text-gray-600">Payment</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -115,9 +117,13 @@ export default async function JobsPage({
                     {profile.role !== "worker" && (
                       <td className="px-4 py-3 text-gray-600 text-xs">{(job.assigned_worker as any)?.full_name ?? "—"}</td>
                     )}
-                    <td className="px-4 py-3 font-medium">{job.price ? formatCurrency(job.price) : "—"}</td>
+                    {canSeeMoney && <td className="px-4 py-3 font-medium">{job.price ? formatCurrency(job.price) : "—"}</td>}
                     <td className="px-4 py-3"><StatusBadge status={job.status} /></td>
-                    <td className="px-4 py-3"><StatusBadge status={job.payment_status} /></td>
+                    {canSeeMoney && (
+                      <td className="px-4 py-3">
+                        <PaymentStatusSelect jobId={job.id} currentStatus={job.payment_status} />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -135,12 +141,12 @@ export default async function JobsPage({
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <StatusBadge status={job.status} />
-                    <StatusBadge status={job.payment_status} />
+                    {canSeeMoney && <StatusBadge status={job.payment_status} />}
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">{job.service_type}</span>
-                  <span className="font-semibold text-gray-900">{job.price ? formatCurrency(job.price) : "—"}</span>
+                  {canSeeMoney && <span className="font-semibold text-gray-900">{job.price ? formatCurrency(job.price) : "—"}</span>}
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   {formatDate(job.scheduled_date)}

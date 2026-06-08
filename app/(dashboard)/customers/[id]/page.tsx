@@ -20,7 +20,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if (!profile || profile.role === 'worker') redirect('/dashboard')
+  if (!profile || profile.role === 'technician') redirect('/dashboard')
 
   const { data: customer } = await db.from('customers').select('*').eq('id', id).single()
   if (!customer) notFound()

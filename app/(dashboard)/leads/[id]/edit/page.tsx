@@ -14,7 +14,7 @@ export default async function EditLeadPage({ params }: { params: Promise<{ id: s
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
+  if (!profile || !['admin', 'd2d_rep'].includes(profile.role)) redirect('/dashboard')
 
   const { data: lead } = await db.from('leads').select('*').eq('id', id).single()
   if (!lead) notFound()

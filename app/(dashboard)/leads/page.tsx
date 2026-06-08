@@ -7,7 +7,7 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { EmptyState } from '@/components/shared/empty-state'
 import { LeadsFilters } from '@/components/leads/leads-filters'
 import { formatDate, formatPhone, formatCurrency, buildCallUrl } from '@/lib/utils'
-import { isAdmin, isManager } from '@/lib/auth/permissions'
+import { isAdmin, isD2DRep } from '@/lib/auth/permissions'
 import type { Lead, Profile } from '@/types/crm'
 
 export default async function LeadsPage({
@@ -22,7 +22,7 @@ export default async function LeadsPage({
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if (!profile || profile.role === 'worker') redirect('/dashboard')
+  if (!profile || profile.role === 'technician') redirect('/dashboard')
 
   const params = await searchParams
   const search = params.search ?? ''
@@ -69,7 +69,7 @@ export default async function LeadsPage({
             {leads?.length ?? 0} lead{leads?.length !== 1 ? 's' : ''}
           </p>
         </div>
-        {(isAdmin(profile.role as any) || isManager(profile.role as any)) && (
+        {(isAdmin(profile.role as any) || isD2DRep(profile.role as any)) && (
           <Button asChild>
             <Link href="/leads/new">
               <Plus className="w-4 h-4 mr-2" />

@@ -45,7 +45,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   if (!user) redirect('/login')
 
   const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single()
-  if (!profile || profile.role === 'worker') redirect('/dashboard')
+  if (!profile || profile.role === 'technician') redirect('/dashboard')
 
   // Fetch lead with related data
   const { data: lead } = await db

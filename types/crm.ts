@@ -25,7 +25,7 @@ export type NoteInsert = Database['public']['Tables']['notes']['Insert']
 export type PaymentInsert = Database['public']['Tables']['payments']['Insert']
 
 // Role type
-export type UserRole = 'admin' | 'manager' | 'worker'
+export type UserRole = 'admin' | 'd2d_rep' | 'technician'
 
 // Status types
 export type LeadStatus =
@@ -139,6 +139,16 @@ export type DashboardStats = {
   averageJobValue: number
   followUpsDueToday: number
   overdueTasksCount: number
+}
+
+// Helper to display role label nicely
+export function formatRoleLabel(role: string | null | undefined): string {
+  switch (role) {
+    case 'admin': return 'Admin'
+    case 'd2d_rep': return 'D2D Rep'
+    case 'technician': return 'Technician'
+    default: return role ?? 'Unknown'
+  }
 }
 
 export type WorkerDashboardStats = {

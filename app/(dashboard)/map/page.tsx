@@ -19,7 +19,7 @@ export default async function MapPage() {
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single() as { data: { role: string } | null }
-  if (!profile || profile.role === 'worker') redirect('/dashboard')
+  if (!profile || profile.role === 'technician') redirect('/dashboard')
 
   const db = createServiceClient()
   const [{ data: jobs }, { data: leads }] = await Promise.all([

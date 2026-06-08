@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/utils'
-import { isAdmin, isManager } from '@/lib/auth/permissions'
+import { isAdmin } from '@/lib/auth/permissions'
 import { startOfDay, startOfWeek, startOfMonth, endOfDay, format } from 'date-fns'
 import type { Profile, Job, Lead, Task } from '@/types/crm'
 
@@ -31,7 +31,7 @@ async function getDashboardData(profile: Profile) {
   const todayDate = format(now, 'yyyy-MM-dd')
   const monthStart = startOfMonth(now).toISOString()
 
-  if (profile.role === 'worker') {
+  if (profile.role === 'technician') {
     // Worker sees only assigned jobs/tasks
     const [jobsToday, upcomingJobs, openTasks, completedThisWeek] = await Promise.all([
       supabase
@@ -62,7 +62,7 @@ async function getDashboardData(profile: Profile) {
     ])
 
     return {
-      role: 'worker' as const,
+      role: 'technician' as const,
       jobsToday: jobsToday.data ?? [],
       upcomingJobs: upcomingJobs.data ?? [],
       openTasks: openTasks.data ?? [],
@@ -160,7 +160,7 @@ async function getDashboardData(profile: Profile) {
   const totalNewThisWeek = (newLeadsThisWeek.count ?? 0) + (newDirectJobsThisWeek.count ?? 0)
 
   return {
-    role: profile.role as 'admin' | 'manager',
+    role: profile.role as 'admin' | 'd2d_rep',
     newLeadsToday: newLeadsToday.count ?? 0,
     newLeadsThisWeek: totalNewThisWeek,
     quotesSent: quotesSent.count ?? 0,
@@ -196,70 +196,61 @@ export default async function DashboardPage() {
 
   const data = await getDashboardData(profile as Profile)
 
-  if (data.role === 'worker') {
+  if (data.role === 'technician') {
     return <WorkerDashboard data={data} profile={profile as Profile} />
   }
 
   return <AdminManagerDashboard data={data} profile={profile as Profile} />
 }
 
-// Worker Dashboard
+// Technician Dashboard — strictly Tasks + Schedule
 function WorkerDashboard({
   data,
   profile,
 }: {
-  data: Awaited<ReturnType<typeof getDashboardData>> & { role: 'worker' }
+  data: Awaited<ReturnType<typeof getDashboardData>> & { role: 'technician' }
   profile: Profile
 }) {
   return (
-    <div className="p-4 lg:p-6 space-y-6 max-w-2xl mx-auto">
+    <div className="p-4 lg:p-6 space-y-5 max-w-2xl mx-auto">
+      {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
           Good {getGreeting()}, {profile.full_name?.split(' ')[0] ?? 'there'}
         </h1>
-        <p className="text-gray-500 text-sm mt-1">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        <p className="text-gray-500 text-sm mt-1">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        </p>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{data.jobsToday.length}</p>
-            <p className="text-xs text-gray-500 mt-1">Today</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-orange-600">{data.openTasks.length}</p>
-            <p className="text-xs text-gray-500 mt-1">Tasks</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{data.completedThisWeek}</p>
-            <p className="text-xs text-gray-500 mt-1">Done this week</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Today's Jobs */}
+      {/* Today's Schedule */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-blue-600" />
-            Today&apos;s Jobs
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-600" />
+              Today&apos;s Schedule
+            </CardTitle>
+            <Link href="/calendar" className="text-xs text-blue-600 hover:underline font-medium">
+              View full calendar →
+            </Link>
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
           {data.jobsToday.length === 0 ? (
-            <p className="text-gray-400 text-sm py-4 text-center">No jobs scheduled today.</p>
+            <div className="py-6 text-center">
+              <p className="text-gray-400 text-sm">No jobs scheduled for today.</p>
+              <Link href="/calendar" className="text-xs text-blue-500 hover:underline mt-1 block">
+                Check your calendar
+              </Link>
+            </div>
           ) : (
             <div className="space-y-3">
               {data.jobsToday.map((job: any) => (
                 <Link
                   key={job.id}
                   href={`/jobs/${job.id}`}
-                  className="flex items-center justify-between p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="flex items-center justify-between p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100"
                 >
                   <div>
                     <p className="font-medium text-sm text-gray-900">{job.service_type}</p>
@@ -267,7 +258,7 @@ function WorkerDashboard({
                       {job.address}{job.city ? `, ${job.city}` : ''}
                     </p>
                     {job.start_time && (
-                      <p className="text-xs text-blue-600 mt-0.5">{formatTime12(job.start_time)}</p>
+                      <p className="text-xs text-blue-600 font-medium mt-0.5">{formatTime12(job.start_time)}</p>
                     )}
                   </div>
                   <StatusBadge status={job.status} />
@@ -278,61 +269,48 @@ function WorkerDashboard({
         </CardContent>
       </Card>
 
-      {/* Upcoming Jobs */}
-      {data.upcomingJobs.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="w-4 h-4 text-purple-600" />
-              Upcoming Jobs
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 space-y-2">
-            {data.upcomingJobs.map((job: any) => (
-              <Link
-                key={job.id}
-                href={`/jobs/${job.id}`}
-                className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-              >
-                <div>
-                  <p className="font-medium text-sm">{job.service_type}</p>
-                  <p className="text-xs text-gray-500">{formatRelativeDate(job.scheduled_date)}</p>
-                </div>
-                <StatusBadge status={job.status} />
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
       {/* Open Tasks */}
-      {data.openTasks.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <CheckSquare className="w-4 h-4 text-orange-600" />
-              Open Tasks
+              My Tasks
+              {data.openTasks.length > 0 && (
+                <span className="ml-1 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full px-2 py-0.5">
+                  {data.openTasks.length}
+                </span>
+              )}
             </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 space-y-2">
-            {data.openTasks.map((task: any) => (
-              <Link
-                key={task.id}
-                href={`/tasks`}
-                className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-              >
-                <div>
-                  <p className="font-medium text-sm">{task.title}</p>
-                  {task.due_date && (
-                    <p className="text-xs text-gray-500">{formatRelativeDate(task.due_date)}</p>
-                  )}
-                </div>
-                <StatusBadge status={task.priority} />
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+            <Link href="/tasks" className="text-xs text-blue-600 hover:underline font-medium">
+              View all →
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {data.openTasks.length === 0 ? (
+            <p className="text-gray-400 text-sm py-4 text-center">No open tasks. You&apos;re all caught up!</p>
+          ) : (
+            <div className="space-y-2">
+              {data.openTasks.map((task: any) => (
+                <Link
+                  key={task.id}
+                  href="/tasks"
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{task.title}</p>
+                    {task.due_date && (
+                      <p className="text-xs text-gray-500">{formatRelativeDate(task.due_date)}</p>
+                    )}
+                  </div>
+                  <StatusBadge status={task.priority} className="flex-shrink-0 ml-2" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -342,9 +320,11 @@ function AdminManagerDashboard({
   data,
   profile,
 }: {
-  data: Awaited<ReturnType<typeof getDashboardData>> & { role: 'admin' | 'manager' }
+  data: Awaited<ReturnType<typeof getDashboardData>> & { role: 'admin' | 'd2d_rep' }
   profile: Profile
 }) {
+  const canSeeMoney = profile.role === 'admin'
+
   return (
     <div className="p-4 lg:p-6 space-y-6">
       <div>
@@ -372,22 +352,26 @@ function AdminManagerDashboard({
           color="purple"
           href="/jobs"
         />
-        <StatCard
-          title="Revenue This Month"
-          value={formatCurrency(data.revenueThisMonth)}
-          subtitle={`${formatCurrency(data.revenueThisWeek)} this week`}
-          icon={<DollarSign className="w-5 h-5 text-green-600" />}
-          color="green"
-          href="/payments"
-        />
-        <StatCard
-          title="Unpaid Jobs"
-          value={formatCurrency(data.unpaidAmount)}
-          subtitle={`${data.unpaidJobs?.length ?? 0} jobs pending`}
-          icon={<AlertCircle className="w-5 h-5 text-red-600" />}
-          color="red"
-          href="/payments"
-        />
+        {canSeeMoney && (
+          <StatCard
+            title="Revenue This Month"
+            value={formatCurrency(data.revenueThisMonth)}
+            subtitle={`${formatCurrency(data.revenueThisWeek)} this week`}
+            icon={<DollarSign className="w-5 h-5 text-green-600" />}
+            color="green"
+            href="/payments"
+          />
+        )}
+        {canSeeMoney && (
+          <StatCard
+            title="Unpaid Jobs"
+            value={formatCurrency(data.unpaidAmount)}
+            subtitle={`${data.unpaidJobs?.length ?? 0} jobs pending`}
+            icon={<AlertCircle className="w-5 h-5 text-red-600" />}
+            color="red"
+            href="/payments"
+          />
+        )}
       </div>
 
       {/* Second row */}
@@ -513,45 +497,47 @@ function AdminManagerDashboard({
           </CardContent>
         </Card>
 
-        {/* Unpaid Jobs */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-red-600" />
-                Unpaid Completed Jobs
-              </CardTitle>
-              <Link href="/payments" className="text-xs text-blue-600 hover:underline">
-                View all
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {data.unpaidJobs?.length === 0 ? (
-              <p className="text-gray-400 text-sm py-4 text-center">No unpaid jobs. All clear!</p>
-            ) : (
-              <div className="space-y-2">
-                {data.unpaidJobs?.map((job: any) => (
-                  <Link
-                    key={job.id}
-                    href={`/jobs/${job.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{job.service_type}</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {job.address}{job.city ? `, ${job.city}` : ''}
-                      </p>
-                    </div>
-                    <span className="text-sm font-semibold text-red-700 flex-shrink-0 ml-2">
-                      {formatCurrency(job.price)}
-                    </span>
-                  </Link>
-                ))}
+        {/* Unpaid Jobs — admin only */}
+        {canSeeMoney && (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-red-600" />
+                  Unpaid Completed Jobs
+                </CardTitle>
+                <Link href="/payments" className="text-xs text-blue-600 hover:underline">
+                  View all
+                </Link>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {data.unpaidJobs?.length === 0 ? (
+                <p className="text-gray-400 text-sm py-4 text-center">No unpaid jobs. All clear!</p>
+              ) : (
+                <div className="space-y-2">
+                  {data.unpaidJobs?.map((job: any) => (
+                    <Link
+                      key={job.id}
+                      href={`/jobs/${job.id}`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{job.service_type}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {job.address}{job.city ? `, ${job.city}` : ''}
+                        </p>
+                      </div>
+                      <span className="text-sm font-semibold text-red-700 flex-shrink-0 ml-2">
+                        {formatCurrency(job.price)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Open Tasks / Follow-ups */}
         <Card>

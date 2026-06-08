@@ -15,7 +15,7 @@ export default async function NewJobPage({
   if (!user) redirect('/login')
 
   const { data: profile } = await db.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/dashboard')
+  if (!profile || !['admin', 'd2d_rep'].includes(profile.role)) redirect('/dashboard')
 
   const params = await searchParams
   const defaultCustomerId = params.customer_id ?? ''

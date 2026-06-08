@@ -7,7 +7,7 @@ import { leadSchema } from '@/lib/validations/lead'
 import { logActivity } from './activity'
 import { geocodeAddress } from '@/lib/utils/geocode'
 
-async function requireAdminOrManager() {
+async function requireAdminOrD2DRep() {
   const supabase = await createClient()
   const {
     data: { user },
@@ -20,14 +20,14 @@ async function requireAdminOrManager() {
     .eq('id', user.id)
     .single()
 
-  if (!profile?.active || !['admin', 'manager'].includes(profile.role)) {
+  if (!profile?.active || !['admin', 'd2d_rep'].includes(profile.role)) {
     return { error: 'Permission denied', user: null, profile: null, supabase }
   }
   return { error: null, user, profile, supabase }
 }
 
 export async function createLead(formData: FormData): Promise<{ error?: string; id?: string }> {
-  const { error: authError, user, supabase } = await requireAdminOrManager()
+  const { error: authError, user, supabase } = await requireAdminOrD2DRep()
   if (authError || !user) return { error: authError ?? 'Not authenticated' }
 
   const raw = Object.fromEntries(formData)
@@ -71,7 +71,7 @@ export async function updateLead(
   id: string,
   formData: FormData
 ): Promise<{ error?: string }> {
-  const { error: authError, supabase } = await requireAdminOrManager()
+  const { error: authError, supabase } = await requireAdminOrD2DRep()
   if (authError) return { error: authError }
 
   const raw = Object.fromEntries(formData)
@@ -114,7 +114,7 @@ export async function updateLeadStatus(
   status: string,
   oldStatus: string
 ): Promise<{ error?: string }> {
-  const { error: authError, supabase } = await requireAdminOrManager()
+  const { error: authError, supabase } = await requireAdminOrD2DRep()
   if (authError) return { error: authError }
 
   const { error } = await supabase!.from('leads').update({ status }).eq('id', id)
@@ -150,7 +150,7 @@ export async function deleteLead(id: string): Promise<{ error?: string }> {
 export async function convertLeadToCustomer(
   leadId: string
 ): Promise<{ error?: string; customerId?: string }> {
-  const { error: authError, user, supabase } = await requireAdminOrManager()
+  const { error: authError, user, supabase } = await requireAdminOrD2DRep()
   if (authError || !user) return { error: authError ?? 'Not authenticated' }
 
   // Fetch the lead
