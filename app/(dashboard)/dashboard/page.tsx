@@ -28,8 +28,9 @@ async function getDashboardData(profile: Profile) {
   const todayEnd = endOfDay(now).toISOString()
   const weekStart = startOfWeek(now, { weekStartsOn: 1 }).toISOString()
   const weekStartDate = format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+  const monthStartDate = format(startOfMonth(now), 'yyyy-MM-dd')
   const todayDate = format(now, 'yyyy-MM-dd')
-  const monthStart = startOfMonth(now).toISOString()
+
 
   if (profile.role === 'technician') {
     // Worker sees only assigned jobs/tasks
@@ -112,16 +113,19 @@ async function getDashboardData(profile: Profile) {
       .select('id', { count: 'exact', head: true })
       .gte('scheduled_date', weekStartDate)
       .neq('status', 'cancelled'),
+    // Revenue: read from jobs.price where paid — catches all payment methods
     supabase
-      .from('payments')
-      .select('amount')
+      .from('jobs')
+      .select('price')
       .eq('payment_status', 'paid')
-      .gte('paid_at', weekStart),
+      .not('price', 'is', null)
+      .gte('scheduled_date', weekStartDate),
     supabase
-      .from('payments')
-      .select('amount')
+      .from('jobs')
+      .select('price')
       .eq('payment_status', 'paid')
-      .gte('paid_at', monthStart),
+      .not('price', 'is', null)
+      .gte('scheduled_date', monthStartDate),
     supabase
       .from('jobs')
       .select('id, job_number, service_type, address, city, price, scheduled_date, customer_id')
@@ -154,8 +158,8 @@ async function getDashboardData(profile: Profile) {
       .limit(5),
   ])
 
-  const weekRevenue = (revenueThisWeek.data ?? []).reduce((sum, p) => sum + (p.amount ?? 0), 0)
-  const monthRevenue = (revenueThisMonth.data ?? []).reduce((sum, p) => sum + (p.amount ?? 0), 0)
+  const weekRevenue = (revenueThisWeek.data ?? []).reduce((sum, j) => sum + (j.price ?? 0), 0)
+  const monthRevenue = (revenueThisMonth.data ?? []).reduce((sum, j) => sum + (j.price ?? 0), 0)
   const unpaidAmount = (unpaidJobs.data ?? []).reduce((sum, j) => sum + (j.price ?? 0), 0)
   const totalNewThisWeek = (newLeadsThisWeek.count ?? 0) + (newDirectJobsThisWeek.count ?? 0)
 

@@ -268,9 +268,19 @@ export async function updatePaymentStatus(
   id: string,
   paymentStatus: string
 ): Promise<{ error?: string }> {
-  const { profile, supabase } = await getCurrentUser()
+  const { user, profile, supabase } = await getCurrentUser()
   if (profile?.role !== 'admin') return { error: 'Permission denied' }
 
+  // Fetch job details needed for sync
+  const { data: job } = await supabase
+    .from('jobs')
+    .select('price, customer_id, payment_status')
+    .eq('id', id)
+    .single()
+
+  if (!job) return { error: 'Job not found' }
+
+  // Update job payment status
   const { error } = await supabase
     .from('jobs')
     .update({ payment_status: paymentStatus })
@@ -278,7 +288,43 @@ export async function updatePaymentStatus(
 
   if (error) return { error: error.message }
 
-  await logActivity('job', id, 'job_payment_status_changed', null, { payment_status: paymentStatus })
+  // When marking paid: upsert a payment record + sync customer totals
+  if (paymentStatus === 'paid' && job.payment_status !== 'paid') {
+    // Only insert if no payment record already exists for this job
+    const { data: existing } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('job_id', id)
+      .limit(1)
+      .maybeSingle()
+
+    if (!existing) {
+      await supabase.from('payments').insert({
+        job_id: id,
+        customer_id: job.customer_id ?? null,
+        amount: job.price ?? 0,
+        payment_method: null,
+        payment_status: 'paid',
+        paid_at: new Date().toISOString(),
+        created_by: user.id,
+      })
+
+      // Sync customer total_spent + last_service_date
+      if (job.customer_id && job.price) {
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('total_spent')
+          .eq('id', job.customer_id)
+          .single()
+        await supabase.from('customers').update({
+          total_spent: (customer?.total_spent ?? 0) + job.price,
+          last_service_date: new Date().toISOString().split('T')[0],
+        }).eq('id', job.customer_id)
+      }
+    }
+  }
+
+  await logActivity('job', id, 'job_payment_status_changed', { payment_status: job.payment_status }, { payment_status: paymentStatus })
   revalidatePath('/jobs')
   revalidatePath(`/jobs/${id}`)
   revalidatePath('/payments')
