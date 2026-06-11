@@ -73,6 +73,27 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Prevent iOS bounce/overscroll on root */
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent iOS auto-zoom on input focus (triggered when font-size < 16px) */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+@media (min-width: 1024px) {
+  input,
+  textarea,
+  select {
+    font-size: inherit !important;
+  }
+}
+
 /* Mobile-friendly touch targets */
 .touch-target {
   min-height: 44px;
